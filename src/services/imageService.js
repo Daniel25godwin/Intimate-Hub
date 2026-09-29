@@ -10,7 +10,11 @@ export async function uploadImage(file, folder = "products") {
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
     body: JSON.stringify({ folder }),
   });
-  if (!signRes.ok) throw new Error("Could not authorize upload");
+  const contentType = signRes.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    throw new Error("Couldn't reach the server. If you're running `npm run dev`, use `vercel dev` instead — /api routes need it.");
+  }
+  if (!signRes.ok) throw new Error((await signRes.json()).message || "Could not authorize upload");
   const { signature, timestamp, folder: fullFolder, apiKey, cloudName } = await signRes.json();
 
   const form = new FormData();

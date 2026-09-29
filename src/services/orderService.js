@@ -15,10 +15,12 @@ export async function createOrder(orderPayload) {
     body: JSON.stringify(orderPayload),
   });
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || "Failed to create order");
+  const contentType = res.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    throw new Error("Couldn't reach the server. If you're running `npm run dev`, use `vercel dev` instead — /api routes need it.");
   }
 
-  return res.json(); // { orderId, orderNumber, total }
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to create order");
+  return data; // { orderId, orderNumber, total }
 }

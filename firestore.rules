@@ -60,7 +60,10 @@ service cloud.firestore {
     }
 
     match /coupons/{couponId} {
-      allow read: if isSignedIn(); // consider a validate-only API instead
+      // Clients never read this directly at checkout — /api/coupons/validate
+      // and /api/orders/create (Admin SDK) handle that. Admin console reads
+      // the list here to manage coupons.
+      allow read: if isAdmin();
       allow write: if isAdmin();
     }
 

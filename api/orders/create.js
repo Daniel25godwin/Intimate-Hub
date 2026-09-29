@@ -1,7 +1,8 @@
 import { adminDb, verifyRequestUser } from "../_lib/firebaseAdmin.js";
+import { computeDiscount } from "../_lib/couponLogic.js";
 
 // POST /api/orders/create
-// Body: { items: [{ productId, qty, variant }], deliveryAddress, couponCode, guestEmail? }
+// Body: { items: [{ productId, qty, variant }], deliveryAddress, couponCode }
 //
 // The client sends WHAT to buy (product ids + quantities). It never sends
 // prices or totals — those are always re-read from Firestore here, inside a
@@ -13,7 +14,6 @@ export default async function handler(req, res) {
   }
 
   const decodedUser = await verifyRequestUser(req); // null = guest checkout
-
   const { items, deliveryAddress, couponCode } = req.body || {};
 
   if (!Array.isArray(items) || items.length === 0) {
@@ -27,25 +27,28 @@ export default async function handler(req, res) {
     const orderRef = adminDb.collection("orders").doc();
 
     const result = await adminDb.runTransaction(async (tx) => {
+      // ---- 1. READS — every tx.get must happen before any tx.set/update ----
+      const productRefs = items.map((item) => adminDb.collection("products").doc(item.productId));
+      const productSnaps = await Promise.all(productRefs.map((ref) => tx.get(ref)));
+
+      let couponSnap = null;
+      if (couponCode) {
+        couponSnap = await tx.get(
+          adminDb.collection("coupons").where("code", "==", couponCode.trim().toUpperCase()).limit(1)
+        );
+      }
+
+      // ---- 2. VALIDATE + COMPUTE (no Firestore calls in this section) ----
       let subtotal = 0;
       const resolvedItems = [];
 
-      for (const item of items) {
-        const productRef = adminDb.collection("products").doc(item.productId);
-        const productSnap = await tx.get(productRef);
+      productSnaps.forEach((snap, i) => {
+        const item = items[i];
+        if (!snap.exists) throw new Error(`Product ${item.productId} not found`);
 
-        if (!productSnap.exists) {
-          throw new Error(`Product ${item.productId} not found`);
-        }
-
-        const product = productSnap.data();
-
-        if (!product.isEnabled) {
-          throw new Error(`${product.name} is not available`);
-        }
-        if (product.stock < item.qty) {
-          throw new Error(`${product.name} is out of stock`);
-        }
+        const product = snap.data();
+        if (!product.isEnabled) throw new Error(`${product.name} is not available`);
+        if (product.stock < item.qty) throw new Error(`${product.name} is out of stock`);
 
         const unitPrice = product.discountPrice ?? product.price;
         subtotal += unitPrice * item.qty;
@@ -57,17 +60,31 @@ export default async function handler(req, res) {
           price: unitPrice,
           variant: item.variant || null,
         });
+      });
 
-        tx.update(productRef, { stock: product.stock - item.qty });
+      let discount = 0;
+      let couponRef = null;
+      let couponUsageCount = 0;
+      if (couponCode) {
+        if (couponSnap.empty) throw new Error("Invalid promo code");
+        const couponDoc = couponSnap.docs[0];
+        couponRef = couponDoc.ref;
+        couponUsageCount = couponDoc.data().usageCount || 0;
+        discount = computeDiscount(couponDoc.data(), subtotal);
       }
 
-      // TODO (Phase 2): resolve couponCode against /coupons here and apply
-      // discount server-side too — never trust a client-supplied discount.
-      const discount = 0;
       const deliveryFee = 1500; // TODO: pull from settings/store by zone
       const total = subtotal - discount + deliveryFee;
-
       const orderNumber = `IH-${Date.now().toString().slice(-8)}`;
+
+      // ---- 3. WRITES ----
+      productSnaps.forEach((snap, i) => {
+        tx.update(productRefs[i], { stock: snap.data().stock - items[i].qty });
+      });
+
+      if (couponRef) {
+        tx.update(couponRef, { usageCount: couponUsageCount + 1 });
+      }
 
       tx.set(orderRef, {
         userId: decodedUser?.uid || null,
@@ -87,7 +104,7 @@ export default async function handler(req, res) {
         statusHistory: [{ status: "pending", at: new Date() }],
       });
 
-      return { orderId: orderRef.id, orderNumber, total };
+      return { orderId: orderRef.id, orderNumber, subtotal, discount, deliveryFee, total };
     });
 
     return res.status(200).json(result);

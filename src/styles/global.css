@@ -105,3 +105,32 @@ input, select, textarea { padding: 9px 10px; border: 1px solid #ddd; border-radi
   .admin-sidebar { width: 100%; }
   .admin-sidebar nav { flex-direction: row; flex-wrap: wrap; }
 }
+
+/* ---- cart / checkout ---- */
+.cart-layout { display: grid; grid-template-columns: 1fr 320px; gap: 32px; align-items: start; }
+.cart-line { display: grid; grid-template-columns: 56px 1fr auto auto 28px; gap: 14px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--color-border); }
+.cart-line img { width: 56px; height: 56px; object-fit: cover; border-radius: 6px; }
+.cart-remove { background: none; border: 0; font-size: 18px; color: var(--color-muted); cursor: pointer; }
+.qty-stepper { display: flex; align-items: center; gap: 8px; }
+.qty-stepper button { width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--color-border); background: #fff; cursor: pointer; }
+.cart-summary { border: 1px solid var(--color-border); border-radius: 10px; padding: 18px; position: sticky; top: 20px; }
+.summary-row { display: flex; justify-content: space-between; margin: 8px 0; font-size: 14px; }
+.summary-total { font-weight: 600; font-size: 16px; border-top: 1px solid var(--color-border); padding-top: 10px; margin-top: 10px; }
+.btn-outline { background: #fff; color: var(--color-text); border: 1px solid var(--color-text); }
+@media (max-width: 800px) {
+  .cart-layout { grid-template-columns: 1fr; }
+  .cart-line { grid-template-columns: 44px 1fr auto; row-gap: 6px; }
+  .cart-line .qty-stepper, .cart-line strong:last-of-type, .cart-remove { grid-column: 2 / -1; justify-self: start; }
+}
+
+/* ---- admin: orders ---- */
+.detail-grid { display: grid; grid-template-columns: 1fr 280px; gap: 32px; margin-top: 16px; }
+.pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; text-transform: capitalize; background: #eee; }
+.pill-green { background: #e3f3e6; color: #2f7a4a; }
+.pill-amber { background: #fbf0dc; color: #93650c; }
+.pill-pending { background: #eee; }
+.pill-confirmed, .pill-processing { background: #e6edfa; color: #2a4d8f; }
+.pill-shipped { background: #e6f0fa; color: #1f6fa8; }
+.pill-delivered { background: #e3f3e6; color: #2f7a4a; }
+.pill-cancelled { background: #fbeeee; color: #9b2c2c; }
+@media (max-width: 800px) { .detail-grid { grid-template-columns: 1fr; } }

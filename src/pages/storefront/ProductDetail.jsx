@@ -3,12 +3,18 @@ import { useParams } from "react-router-dom";
 import { getProductBySlug } from "../../services/productService";
 import { formatCurrency } from "../../utils/format";
 import { optimizedUrl } from "../../services/imageService";
+import { useCart } from "../../context/CartContext";
+import { useNavigate } from "react-router-dom";
 
 export default function ProductDetail() {
   const { slug } = useParams();
   const [product, setProduct] = useState(undefined);
   const [active, setActive] = useState(0);
   const [selected, setSelected] = useState({});
+  const [qty, setQty] = useState(1);
+  const [notice, setNotice] = useState("");
+  const { addItem } = useCart();
+  const navigate = useNavigate();
 
   useEffect(() => {
     getProductBySlug(slug).then(setProduct).catch(() => setProduct(null));
@@ -20,6 +26,19 @@ export default function ProductDetail() {
   const onSale = product.discountPrice && product.discountPrice < product.price;
   const price = onSale ? product.discountPrice : product.price;
   const stockLabel = product.stock <= 0 ? "Out of stock" : product.stock <= 5 ? `Only ${product.stock} left` : "In stock";
+
+  const missingVariant = (product.variants || []).find((v) => !selected[v.name]);
+  const variantString = Object.values(selected).filter(Boolean).join(" / ") || null;
+
+  function handleAdd(goToCheckout) {
+    if (missingVariant) {
+      setNotice(`Please select ${missingVariant.name}`);
+      return;
+    }
+    addItem(product, qty, variantString);
+    if (goToCheckout) navigate("/cart");
+    else setNotice("Added to cart");
+  }
 
   return (
     <div className="section detail">
@@ -49,7 +68,12 @@ export default function ProductDetail() {
           </div>
         ))}
 
-        <button className="btn" disabled title="Cart arrives in the next phase">Add to cart</button>
+        {notice && <p className="muted">{notice}</p>}
+        <div className="row">
+          <input type="number" min="1" max={product.stock || 99} value={qty} onChange={(e) => setQty(Math.max(1, Number(e.target.value) || 1))} style={{ width: 70 }} disabled={product.stock <= 0} />
+          <button className="btn" onClick={() => handleAdd(false)} disabled={product.stock <= 0}>Add to cart</button>
+          <button className="btn btn-outline" onClick={() => handleAdd(true)} disabled={product.stock <= 0}>Buy now</button>
+        </div>
 
         <h3>Description</h3>
         <p style={{ whiteSpace: "pre-line" }}>{product.description}</p>

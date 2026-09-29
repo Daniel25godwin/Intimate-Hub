@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "../context/AuthContext";
+import { CartProvider } from "../context/CartContext";
 import RequireAdmin from "../components/shared/RequireAdmin";
 
 import StorefrontLayout from "../layouts/StorefrontLayout";
@@ -40,6 +41,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+      <CartProvider>
         <Routes>
           {/* Auth screens: full-screen, no storefront header/footer */}
           <Route path="/login" element={<Login />} />
@@ -89,6 +91,7 @@ export default function App() {
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>
+      </CartProvider>
       </AuthProvider>
     </BrowserRouter>
   );
