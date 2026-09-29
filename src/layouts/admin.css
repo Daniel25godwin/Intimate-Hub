@@ -30,8 +30,12 @@
   width: var(--side-w); flex-shrink: 0;
   background: var(--side); color: var(--side-ink);
   display: flex; flex-direction: column;
-  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  position: sticky; top: 0;
+  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
   padding: 20px 12px;
+  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
 }
 .a-brand { color: #fff; font-size: 18px; font-weight: 700; padding: 4px 12px 20px; letter-spacing: .2px; }
 .a-nav { flex: 1; display: flex; flex-direction: column; gap: 18px; }
@@ -43,7 +47,7 @@
 }
 .admin a.a-nav-link:hover { background: rgba(255,255,255,.07); color: #fff; }
 .admin a.a-nav-link.active { background: var(--accent); color: #fff; }
-.a-side-foot { border-top: 1px solid rgba(255,255,255,.1); padding-top: 12px; margin-top: 16px; }
+.a-side-foot { border-top: 1px solid rgba(255,255,255,.1); padding-top: 12px; margin-top: 16px; padding-bottom: 8px; }
 
 /* ---------- Main / topbar ---------- */
 .a-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
@@ -156,7 +160,9 @@
 /* ---------- Mobile ---------- */
 @media (max-width: 860px) {
   .a-sidebar {
-    position: fixed; left: 0; top: 0; z-index: 40; width: 270px;
+    position: fixed; left: 0; top: 0; bottom: 0; z-index: 40; width: 270px;
+    height: auto;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
     transform: translateX(-100%); transition: transform .2s ease;
   }
   .a-sidebar.is-open { transform: none; }
