@@ -1,18 +1,23 @@
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import { createOrder } from "../../services/orderService";
 import { formatCurrency } from "../../utils/format";
+import CheckoutSteps from "../../components/storefront/CheckoutSteps";
 
 const DELIVERY_FEE = 1500; // display only — the real fee is computed in /api/orders/create
 
 // Payment gateway (Paystack/Flutterwave) is Phase 2. For now the order is
 // placed as unpaid and fulfilled against Pay on Delivery / Bank Transfer.
 const PAYMENT_METHODS = [
-  { id: "pay-on-delivery", label: "Pay on delivery" },
-  { id: "bank-transfer", label: "Bank transfer (details sent after order)" },
+  { id: "pay-on-delivery", label: "Pay on delivery", hint: "Pay the rider when your order arrives." },
+  { id: "bank-transfer", label: "Bank transfer", hint: "We send the account details after you place the order." },
 ];
+
+function Field({ label, children }) {
+  return <label className="field"><span>{label}</span>{children}</label>;
+}
 
 export default function Checkout() {
   const { items, subtotal, clearCart } = useCart();
@@ -35,10 +40,9 @@ export default function Checkout() {
     e.preventDefault();
     setError("");
     if (!form.name || !form.email || !form.phone || !form.street || !form.city || !form.state) {
-      setError("Please fill in every field");
+      setError("Please fill in every field.");
       return;
     }
-
     setPlacing(true);
     try {
       const result = await createOrder({
@@ -58,54 +62,69 @@ export default function Checkout() {
   }
 
   if (items.length === 0) {
-    return <div className="section"><p>Your cart is empty. <a href="/shop">Go shopping</a>.</p></div>;
+    return (
+      <div className="section empty">
+        <h1>Your cart is empty</h1>
+        <Link to="/shop" className="btn">Go shopping</Link>
+      </div>
+    );
   }
 
   return (
-    <div className="section cart-layout">
-      <form onSubmit={placeOrder} className="form">
-        <h1>Checkout</h1>
+    <div className="section">
+      <CheckoutSteps current={2} />
+      <div className="cart-layout">
+        <form onSubmit={placeOrder} className="form">
+          <h1>Checkout</h1>
 
-        <h3>Contact</h3>
-        <input placeholder="Full name" value={form.name} onChange={set("name")} required />
-        <div className="row">
-          <input type="email" placeholder="Email" value={form.email} onChange={set("email")} required />
-          <input type="tel" placeholder="Phone" value={form.phone} onChange={set("phone")} required />
-        </div>
-
-        <h3>Delivery address</h3>
-        <input placeholder="Street address" value={form.street} onChange={set("street")} required />
-        <div className="row">
-          <input placeholder="City" value={form.city} onChange={set("city")} required />
-          <input placeholder="State" value={form.state} onChange={set("state")} required />
-        </div>
-        <p className="muted" style={{ fontSize: 13 }}>Shipped in plain, unbranded packaging.</p>
-
-        <h3>Payment method</h3>
-        {PAYMENT_METHODS.map((m) => (
-          <label key={m.id} className="auth-check" style={{ marginBottom: 6 }}>
-            <input type="radio" name="payment" checked={form.payment === m.id} onChange={() => setForm({ ...form, payment: m.id })} />
-            <span>{m.label}</span>
-          </label>
-        ))}
-
-        {error && <p className="error">{error}</p>}
-        <button className="btn" disabled={placing}>{placing ? "Placing order…" : "Place order"}</button>
-      </form>
-
-      <aside className="cart-summary">
-        <h3>Order summary</h3>
-        {items.map((i) => (
-          <div key={`${i.productId}::${i.variant || ""}`} className="summary-row">
-            <span>{i.name} {i.variant ? `(${i.variant})` : ""} × {i.qty}</span>
-            <span>{formatCurrency(i.price * i.qty)}</span>
+          <div className="panel">
+            <h3>Contact</h3>
+            <Field label="Full name"><input value={form.name} onChange={set("name")} autoComplete="name" required /></Field>
+            <div className="row" style={{ marginBottom: 0 }}>
+              <Field label="Email"><input type="email" value={form.email} onChange={set("email")} autoComplete="email" required /></Field>
+              <Field label="Phone"><input type="tel" inputMode="tel" value={form.phone} onChange={set("phone")} autoComplete="tel" required /></Field>
+            </div>
           </div>
-        ))}
-        <div className="summary-row"><span>Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
-        {couponCode && <div className="summary-row"><span>Code {couponCode}</span><span>applied at checkout</span></div>}
-        <div className="summary-row"><span>Delivery</span><span>{formatCurrency(DELIVERY_FEE)}</span></div>
-        <p className="muted" style={{ fontSize: 12 }}>Final total is confirmed on the next screen.</p>
-      </aside>
+
+          <div className="panel">
+            <h3>Delivery address</h3>
+            <Field label="Street address"><input value={form.street} onChange={set("street")} autoComplete="street-address" required /></Field>
+            <div className="row" style={{ marginBottom: 0 }}>
+              <Field label="City"><input value={form.city} onChange={set("city")} autoComplete="address-level2" required /></Field>
+              <Field label="State"><input value={form.state} onChange={set("state")} autoComplete="address-level1" required /></Field>
+            </div>
+            <p className="muted" style={{ fontSize: 13, margin: 0 }}>Shipped in plain, unbranded packaging.</p>
+          </div>
+
+          <div className="panel">
+            <h3>Payment method</h3>
+            {PAYMENT_METHODS.map((m) => (
+              <label key={m.id} className={`pay-option ${form.payment === m.id ? "on" : ""}`}>
+                <input type="radio" name="payment" checked={form.payment === m.id} onChange={() => setForm({ ...form, payment: m.id })} />
+                <span><strong>{m.label}</strong><small>{m.hint}</small></span>
+              </label>
+            ))}
+          </div>
+
+          {error && <p className="error" role="alert">{error}</p>}
+          <button className="btn" disabled={placing}>{placing ? "Placing order…" : "Place order"}</button>
+        </form>
+
+        <aside className="cart-summary">
+          <h3>Order summary</h3>
+          {items.map((i) => (
+            <div key={`${i.productId}::${i.variant || ""}`} className="summary-row">
+              <span>{i.name}{i.variant ? ` (${i.variant})` : ""} × {i.qty}</span>
+              <span>{formatCurrency(i.price * i.qty)}</span>
+            </div>
+          ))}
+          <div className="summary-row"><span>Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
+          {couponCode && <div className="summary-row"><span>Code {couponCode}</span><span>applied at checkout</span></div>}
+          <div className="summary-row"><span>Delivery</span><span>{formatCurrency(DELIVERY_FEE)}</span></div>
+          <div className="summary-row summary-total"><span>{couponCode ? "Total before code" : "Total"}</span><span>{formatCurrency(subtotal + DELIVERY_FEE)}</span></div>
+          <p className="muted" style={{ fontSize: 13, margin: 0 }}>You'll see the final total once the order is placed.</p>
+        </aside>
+      </div>
     </div>
   );
 }

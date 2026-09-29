@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { Search } from "lucide-react";
 import ProductCard from "../../components/storefront/ProductCard";
 import { getEnabledProducts } from "../../services/productService";
 import { listCategories } from "../../services/categoryService";
@@ -9,23 +10,28 @@ export default function Shop() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [sort, setSort] = useState("newest");
+  // category and search live in the URL so results can be shared and the back button works
   const category = params.get("category") || "";
+  const search = params.get("q") || "";
 
   useEffect(() => {
     Promise.all([getEnabledProducts(), listCategories()])
-      .then(([p, c]) => { setProducts(p); setCategories(c); })
+      .then(([p, c]) => { setProducts(p); setCategories(c.filter((x) => x.isEnabled !== false)); })
       .finally(() => setLoading(false));
   }, []);
 
-  // Catalog is filtered client-side: fine for a few hundred products and avoids
-  // Firestore composite indexes. Revisit if the catalog grows a lot.
+  function update(patch) {
+    const next = new URLSearchParams(params);
+    Object.entries(patch).forEach(([k, v]) => (v ? next.set(k, v) : next.delete(k)));
+    setParams(next, { replace: true });
+  }
+
   const visible = useMemo(() => {
     const eff = (p) => (p.discountPrice && p.discountPrice < p.price ? p.discountPrice : p.price);
-    let list = products.filter((p) => {
+    const list = products.filter((p) => {
       if (category && p.category !== category) return false;
       if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
       if (minPrice && eff(p) < Number(minPrice)) return false;
@@ -33,33 +39,57 @@ export default function Shop() {
       return true;
     });
     const t = (p) => p.createdAt?.seconds || 0;
-    list = [...list].sort((a, b) =>
+    return [...list].sort((a, b) =>
       sort === "price-asc" ? eff(a) - eff(b)
       : sort === "price-desc" ? eff(b) - eff(a)
       : sort === "popular" ? (b.ratingCount || 0) - (a.ratingCount || 0)
       : t(b) - t(a));
-    return list;
   }, [products, category, search, minPrice, maxPrice, sort]);
+
+  const hasFilters = category || search || minPrice || maxPrice;
+  const activeCat = categories.find((c) => c.id === category);
+  function clearAll() { setParams({}); setMinPrice(""); setMaxPrice(""); }
 
   return (
     <div className="section">
-      <h1>Shop</h1>
+      <h1>{activeCat ? activeCat.name : "Shop"}</h1>
+
+      <div className="chips" role="tablist" aria-label="Categories">
+        <button className={`chip ${!category ? "on" : ""}`} onClick={() => update({ category: "" })}>All</button>
+        {categories.map((c) => (
+          <button key={c.id} className={`chip ${category === c.id ? "on" : ""}`} onClick={() => update({ category: c.id })}>{c.name}</button>
+        ))}
+      </div>
+
       <div className="filters">
-        <input placeholder="Search products" value={search} onChange={(e) => setSearch(e.target.value)} />
-        <select value={category} onChange={(e) => setParams(e.target.value ? { category: e.target.value } : {})}>
-          <option value="">All categories</option>
-          {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
-        <input type="number" placeholder="Min ₦" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} />
-        <input type="number" placeholder="Max ₦" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} />
-        <select value={sort} onChange={(e) => setSort(e.target.value)}>
+        <input className="f-search" type="search" placeholder="Search products" value={search} onChange={(e) => update({ q: e.target.value })} />
+        <input className="f-price" type="number" min="0" placeholder="Min ₦" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} />
+        <input className="f-price" type="number" min="0" placeholder="Max ₦" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} />
+        <select value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Sort by">
           <option value="newest">Newest</option>
           <option value="popular">Popular</option>
           <option value="price-asc">Price: low to high</option>
           <option value="price-desc">Price: high to low</option>
         </select>
       </div>
-      {loading ? <p>Loading…</p> : visible.length === 0 ? <p className="muted">No products found.</p> : (
+
+      {!loading && (
+        <div className="result-bar">
+          <span>{visible.length} {visible.length === 1 ? "product" : "products"}</span>
+          {hasFilters && <button className="link-btn" onClick={clearAll}>Clear filters</button>}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="grid">{[0, 1, 2, 3, 4, 5, 6, 7].map((i) => <div key={i} className="skeleton" />)}</div>
+      ) : visible.length === 0 ? (
+        <div className="empty">
+          <div className="empty-icon"><Search size={26} /></div>
+          <h2>No products found</h2>
+          <p className="muted">Try a different search or remove some filters.</p>
+          {hasFilters && <button className="btn" onClick={clearAll}>Clear filters</button>}
+        </div>
+      ) : (
         <div className="grid">{visible.map((p) => <ProductCard key={p.id} product={p} />)}</div>
       )}
     </div>
