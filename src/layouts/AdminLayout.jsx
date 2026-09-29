@@ -23,6 +23,7 @@ export default function AdminLayout() {
             <Link key={item.to} to={item.to}>{item.label}</Link>
           ))}
         </nav>
+        <Link to="/" className="admin-back-to-store">← Back to store</Link>
       </aside>
 
       <div className="admin-main">

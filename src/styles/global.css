@@ -45,6 +45,9 @@ a { color: inherit; text-decoration: none; }
   background: #111;
   color: #fff;
   padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 .admin-sidebar nav {
@@ -52,7 +55,17 @@ a { color: inherit; text-decoration: none; }
   flex-direction: column;
   gap: 10px;
   margin-top: 20px;
+  flex: 1;
 }
+
+.admin-back-to-store {
+  border-top: 1px solid rgba(255,255,255,.15);
+  padding-top: 14px;
+  margin-top: 14px;
+  font-size: 13px;
+  color: #ccc;
+}
+.admin-back-to-store:hover { color: #fff; }
 
 .admin-main {
   flex: 1;
@@ -134,3 +147,9 @@ input, select, textarea { padding: 9px 10px; border: 1px solid #ddd; border-radi
 .pill-delivered { background: #e3f3e6; color: #2f7a4a; }
 .pill-cancelled { background: #fbeeee; color: #9b2c2c; }
 @media (max-width: 800px) { .detail-grid { grid-template-columns: 1fr; } }
+
+/* ---- admin dashboard quick links ---- */
+.dash-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; margin-top: 16px; }
+.dash-card { display: flex; flex-direction: column; gap: 4px; padding: 18px; border: 1px solid var(--color-border); border-radius: 10px; background: #fff; transition: border-color .15s; }
+.dash-card:hover { border-color: var(--color-accent); }
+.dash-card span { font-size: 13px; }
