@@ -6,7 +6,7 @@ import { previewCoupon } from "../../services/couponService";
 import { formatCurrency } from "../../utils/format";
 import CheckoutSteps from "../../components/storefront/CheckoutSteps";
 
-const DELIVERY_FEE = 1500; // matches the fallback in /api/orders/create — real fee is set there
+const DELIVERY_FEE = 0; // free delivery — must match the fee set in /api/orders/create
 
 export default function Cart() {
   const { items, setQty, removeItem, subtotal } = useCart();
@@ -92,7 +92,7 @@ export default function Cart() {
 
           <div className="summary-row"><span>Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
           {discount > 0 && <div className="summary-row"><span>Discount</span><span>−{formatCurrency(discount)}</span></div>}
-          <div className="summary-row"><span>Delivery</span><span>{formatCurrency(DELIVERY_FEE)}</span></div>
+          <div className="summary-row"><span>Delivery</span><span>{DELIVERY_FEE === 0 ? "Free" : formatCurrency(DELIVERY_FEE)}</span></div>
           <div className="summary-row summary-total"><span>Total</span><span>{formatCurrency(total)}</span></div>
 
           <button className="btn" style={{ width: "100%" }} onClick={() => navigate("/checkout", { state: { couponCode: coupon?.code || null } })}>

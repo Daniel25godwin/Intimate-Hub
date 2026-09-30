@@ -73,7 +73,7 @@ export default async function handler(req, res) {
         discount = computeDiscount(couponDoc.data(), subtotal);
       }
 
-      const deliveryFee = 1500; // TODO: pull from settings/store by zone
+      const deliveryFee = 0; // free delivery
       const total = subtotal - discount + deliveryFee;
       const orderNumber = `IH-${Date.now().toString().slice(-8)}`;
 

@@ -6,7 +6,7 @@ import { createOrder } from "../../services/orderService";
 import { formatCurrency } from "../../utils/format";
 import CheckoutSteps from "../../components/storefront/CheckoutSteps";
 
-const DELIVERY_FEE = 1500; // display only — the real fee is computed in /api/orders/create
+const DELIVERY_FEE = 0; // free delivery — must match the fee set in /api/orders/create
 
 // Payment gateway (Paystack/Flutterwave) is Phase 2. For now the order is
 // placed as unpaid and fulfilled against Pay on Delivery / Bank Transfer.
@@ -120,7 +120,7 @@ export default function Checkout() {
           ))}
           <div className="summary-row"><span>Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
           {couponCode && <div className="summary-row"><span>Code {couponCode}</span><span>applied at checkout</span></div>}
-          <div className="summary-row"><span>Delivery</span><span>{formatCurrency(DELIVERY_FEE)}</span></div>
+          <div className="summary-row"><span>Delivery</span><span>{DELIVERY_FEE === 0 ? "Free" : formatCurrency(DELIVERY_FEE)}</span></div>
           <div className="summary-row summary-total"><span>{couponCode ? "Total before code" : "Total"}</span><span>{formatCurrency(subtotal + DELIVERY_FEE)}</span></div>
           <p className="muted" style={{ fontSize: 13, margin: 0 }}>You'll see the final total once the order is placed.</p>
         </aside>
