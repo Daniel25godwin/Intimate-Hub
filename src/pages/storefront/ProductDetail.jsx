@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { Minus, Plus, Package, Banknote } from "lucide-react";
+import { Minus, Plus, Package, Banknote, Heart } from "lucide-react";
 import { getProductBySlug } from "../../services/productService";
 import { formatCurrency } from "../../utils/format";
 import { optimizedUrl } from "../../services/imageService";
 import { useCart } from "../../context/CartContext";
+import { useAuth } from "../../context/AuthContext";
+import { getWishlistIds, toggleWishlist } from "../../services/wishlistService";
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -15,11 +17,17 @@ export default function ProductDetail() {
   const [notice, setNotice] = useState(null); // { text, type: "warn" | "added" }
   const { addItem } = useCart();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     setProduct(undefined); setActive(0); setSelected({}); setQty(1); setNotice(null);
     getProductBySlug(slug).then(setProduct).catch(() => setProduct(null));
   }, [slug]);
+
+  useEffect(() => {
+    if (user && product?.id) getWishlistIds(user.uid).then((ids) => setSaved(ids.includes(product.id))).catch(() => {});
+  }, [user, product?.id]);
 
   if (product === undefined) return <div className="section"><div className="skeleton" style={{ minHeight: 420 }} /></div>;
   if (product === null) {
@@ -42,6 +50,13 @@ export default function ProductDetail() {
 
   const missingVariant = (product.variants || []).find((v) => !selected[v.name]);
   const variantString = Object.values(selected).filter(Boolean).join(" / ") || null;
+
+  async function toggleSave() {
+    if (!user) { navigate("/login", { state: { from: { pathname: `/product/${slug}` } } }); return; }
+    const next = !saved;
+    setSaved(next);
+    try { await toggleWishlist(user.uid, product.id, next); } catch { setSaved(!next); }
+  }
 
   function handleAdd(goToCart) {
     if (missingVariant) {
@@ -99,6 +114,9 @@ export default function ProductDetail() {
             </div>
             <button className="btn btn-full" onClick={() => handleAdd(false)} disabled={out}>Add to cart</button>
             <button className="btn btn-outline btn-full" onClick={() => handleAdd(true)} disabled={out}>Buy now</button>
+            <button type="button" className="icon-btn" aria-pressed={saved} aria-label={saved ? "Remove from wishlist" : "Save to wishlist"} onClick={toggleSave}>
+              <Heart size={20} fill={saved ? "currentColor" : "none"} />
+            </button>
           </div>
 
           {notice && (

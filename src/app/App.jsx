@@ -5,6 +5,7 @@ import RequireAdmin from "../components/shared/RequireAdmin";
 
 import StorefrontLayout from "../layouts/StorefrontLayout";
 import AdminLayout from "../layouts/AdminLayout";
+import AccountLayout from "../layouts/AccountLayout";
 
 import Home from "../pages/storefront/Home";
 import Shop from "../pages/storefront/Shop";
@@ -61,12 +62,14 @@ export default function App() {
             <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
             <Route path="/payment/callback" element={<PaymentCallback />} />
 
-            <Route path="/account" element={<AccountOverview />} />
-            <Route path="/account/orders" element={<AccountOrders />} />
-            <Route path="/account/profile" element={<AccountProfile />} />
-            <Route path="/account/addresses" element={<AccountAddresses />} />
-            <Route path="/account/wishlist" element={<AccountWishlist />} />
-            <Route path="/account/security" element={<AccountSecurity />} />
+            <Route path="/account" element={<AccountLayout />}>
+              <Route index element={<AccountOverview />} />
+              <Route path="orders" element={<AccountOrders />} />
+              <Route path="profile" element={<AccountProfile />} />
+              <Route path="addresses" element={<AccountAddresses />} />
+              <Route path="wishlist" element={<AccountWishlist />} />
+              <Route path="security" element={<AccountSecurity />} />
+            </Route>
           </Route>
 
           {/* Admin — gated by RequireAdmin, real enforcement is in Firestore/Storage rules */}

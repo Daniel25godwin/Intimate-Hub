@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Lock, CreditCard, Landmark, Smartphone, Check } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
@@ -7,6 +7,7 @@ import { createOrder } from "../../services/orderService";
 import { formatCurrency } from "../../utils/format";
 import CheckoutSteps from "../../components/storefront/CheckoutSteps";
 import { payNow } from "../../services/paymentService";
+import { getCheckoutDefaults } from "../../services/accountService";
 
 const DELIVERY_FEE = 0; // free delivery — must match the fee set in /api/orders/create
 
@@ -49,6 +50,18 @@ export default function Checkout() {
   });
   const [error, setError] = useState("");
   const [step, setStep] = useState(null); // null | "creating" | "redirecting"
+
+  // signed-in customers: fill in their saved name, phone and default address
+  useEffect(() => {
+    if (!user) return;
+    getCheckoutDefaults(user.uid)
+      .then((d) => setForm((f) => ({
+        ...f,
+        name: f.name || d.name || "", phone: f.phone || d.phone || "",
+        street: f.street || d.street || "", city: f.city || d.city || "", state: f.state || d.state || "",
+      })))
+      .catch(() => {});
+  }, [user]);
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 

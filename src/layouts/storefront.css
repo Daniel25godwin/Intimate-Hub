@@ -249,3 +249,21 @@
 .pay-methods li { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; font-size: 13.5px; color: var(--muted); background: #fff; }
 .pay-methods svg { color: var(--accent); }
 @media (prefers-reduced-motion: reduce) { .spinner, .pay-progress li.now span { animation-duration: 2s; } }
+
+/* ---------- Account area ---------- */
+.acct-tabs { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--line); margin-bottom: 26px; scrollbar-width: none; }
+.acct-tabs::-webkit-scrollbar { display: none; }
+.storefront .acct-tabs a { padding: 10px 14px; color: var(--muted); text-decoration: none; font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+.storefront .acct-tabs a:hover { color: var(--ink); }
+.storefront .acct-tabs a.active { color: var(--accent); border-color: var(--accent); }
+.acct-body .section { padding: 0; max-width: none; }
+.acct-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; margin-top: 14px; }
+.storefront a.acct-card { display: flex; flex-direction: column; gap: 4px; padding: 18px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); color: var(--ink); text-decoration: none; }
+.storefront a.acct-card:hover { border-color: var(--accent); }
+.acct-card strong { font-size: 16px; }
+.storefront .addr { margin: 0; }
+.storefront .verified { font-style: normal; font-weight: 600; font-size: 12px; color: var(--ok); background: #e2f3e8; padding: 1px 8px; border-radius: 999px; margin-left: 6px; }
+.storefront .field input:disabled { background: #f5f3f5; color: var(--muted); }
+.wish-body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 4px; }
+.storefront .icon-btn { width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--line); background: #fff; color: var(--accent); display: grid; place-items: center; cursor: pointer; flex-shrink: 0; }
+.storefront .icon-btn:hover, .storefront .icon-btn[aria-pressed="true"] { background: var(--soft); border-color: var(--accent); }
