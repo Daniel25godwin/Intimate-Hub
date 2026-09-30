@@ -32,7 +32,7 @@ export default function Home() {
       <div className="trust">
         <div><Package size={20} /><span><strong>Plain packaging</strong>Nothing on the parcel says what's inside.</span></div>
         <div><Lock size={20} /><span><strong>Private by default</strong>Your details stay with us.</span></div>
-        <div><Banknote size={20} /><span><strong>Pay your way</strong>Pay on delivery or by bank transfer.</span></div>
+        <div><Banknote size={20} /><span><strong>Pay your way</strong>Pay securely online by card, bank transfer or USSD.</span></div>
       </div>
 
       {cats.length > 0 && (

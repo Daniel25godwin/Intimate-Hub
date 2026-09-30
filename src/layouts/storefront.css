@@ -163,7 +163,8 @@
 .storefront .form { display: flex; flex-direction: column; gap: 14px; }
 .panel { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; display: flex; flex-direction: column; gap: 14px; }
 .panel h3 { margin: 0; }
-.storefront .field { display: flex; flex-direction: column; gap: 6px; flex: 1 1 200px; }
+.storefront .field { display: flex; flex-direction: column; gap: 6px; }
+.storefront .row > .field { flex: 1 1 200px; }
 .storefront .field > span { font-size: 13px; font-weight: 600; }
 .storefront .field input { width: 100%; }
 .pay-option { display: flex; gap: 12px; align-items: flex-start; padding: 14px; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; background: #fff; }
@@ -231,3 +232,20 @@
 @media (max-width: 640px) {
   .storefront .cart-line > img, .storefront .cart-img { flex-basis: 64px; width: 64px; height: 64px; }
 }
+
+/* ---------- Payment hand-off screen & payment panel ---------- */
+.pay-overlay { position: fixed; inset: 0; z-index: 100; background: var(--bg); display: grid; place-items: center; text-align: center; padding: 24px; }
+.pay-overlay > div { max-width: 360px; }
+.spinner { width: 44px; height: 44px; border: 4px solid var(--soft); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 22px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.pay-progress { list-style: none; margin: 18px auto 22px; padding: 0; display: inline-flex; flex-direction: column; gap: 10px; text-align: left; color: var(--muted); }
+.pay-progress li { display: flex; align-items: center; gap: 10px; }
+.pay-progress li span { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; flex-shrink: 0; }
+.pay-progress li.now { color: var(--ink); font-weight: 600; }
+.pay-progress li.now span { border-color: var(--accent); border-top-color: transparent; animation: spin .8s linear infinite; }
+.pay-progress li.done { color: var(--ink); }
+.pay-progress li.done span { background: var(--ok); border-color: var(--ok); color: #fff; }
+.pay-methods { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.pay-methods li { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; font-size: 13.5px; color: var(--muted); background: #fff; }
+.pay-methods svg { color: var(--accent); }
+@media (prefers-reduced-motion: reduce) { .spinner, .pay-progress li.now span { animation-duration: 2s; } }

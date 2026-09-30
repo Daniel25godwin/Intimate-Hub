@@ -73,7 +73,9 @@ export default function OrderDetail() {
 
           <h3>Payment</h3>
           <p>Status: <strong>{order.paymentStatus}</strong></p>
-          <p className="muted">{order.paymentRef ? `Ref: ${order.paymentRef}` : "No gateway reference yet (Phase 2)"}</p>
+          <p className="muted">Method: {order.paymentMethod || "—"}</p>
+          <p className="muted">{order.paymentRef ? `Ref: ${order.paymentRef}` : "No payment reference"}</p>
+          {order.paidAt?.seconds && <p className="muted">Paid: {new Date(order.paidAt.seconds * 1000).toLocaleString()}</p>}
 
           <h3>Customer</h3>
           <p>{order.userId ? <Link to={`/admin/customers`}>{order.userId}</Link> : "Guest checkout"}</p>

@@ -14,7 +14,11 @@ export default async function handler(req, res) {
   }
 
   const decodedUser = await verifyRequestUser(req); // null = guest checkout
-  const { items, deliveryAddress, couponCode } = req.body || {};
+  const { items, deliveryAddress, couponCode, paymentMethod, contactEmail } = req.body || {};
+  const METHODS = ["online"];
+  if (!METHODS.includes(paymentMethod)) {
+    return res.status(400).json({ message: "Please choose a payment method" });
+  }
 
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ message: "Cart is empty" });
@@ -98,13 +102,15 @@ export default async function handler(req, res) {
         status: "pending",
         paymentStatus: "unpaid",
         paymentRef: null,
+        paymentMethod,
+        contactEmail: contactEmail || decodedUser?.email || null,
         deliveryAddress,
         packaging: "discreet",
         createdAt: new Date(),
         statusHistory: [{ status: "pending", at: new Date() }],
       });
 
-      return { orderId: orderRef.id, orderNumber, subtotal, discount, deliveryFee, total };
+      return { orderId: orderRef.id, orderNumber, subtotal, discount, deliveryFee, total, paymentMethod, paymentStatus: "unpaid" };
     });
 
     return res.status(200).json(result);

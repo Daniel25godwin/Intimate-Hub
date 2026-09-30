@@ -110,7 +110,7 @@ export default function ProductDetail() {
 
           <ul className="assure">
             <li><Package size={18} /> Ships in plain, unbranded packaging</li>
-            <li><Banknote size={18} /> Pay on delivery or by bank transfer</li>
+            <li><Banknote size={18} /> Secure online payment — card, bank transfer or USSD</li>
           </ul>
 
           {product.description && (<><h3>Description</h3><p style={{ whiteSpace: "pre-line" }}>{product.description}</p></>)}

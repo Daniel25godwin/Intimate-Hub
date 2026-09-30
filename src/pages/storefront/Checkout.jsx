@@ -1,22 +1,39 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Lock, CreditCard, Landmark, Smartphone, Check } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import { createOrder } from "../../services/orderService";
 import { formatCurrency } from "../../utils/format";
 import CheckoutSteps from "../../components/storefront/CheckoutSteps";
+import { payNow } from "../../services/paymentService";
 
 const DELIVERY_FEE = 0; // free delivery — must match the fee set in /api/orders/create
 
-// Payment gateway (Paystack/Flutterwave) is Phase 2. For now the order is
-// placed as unpaid and fulfilled against Pay on Delivery / Bank Transfer.
-const PAYMENT_METHODS = [
-  { id: "pay-on-delivery", label: "Pay on delivery", hint: "Pay the rider when your order arrives." },
-  { id: "bank-transfer", label: "Bank transfer", hint: "We send the account details after you place the order." },
-];
-
 function Field({ label, children }) {
   return <label className="field"><span>{label}</span>{children}</label>;
+}
+
+// Full-screen screen shown between "Place order" and Paystack, so the
+// customer never sees an empty cart or a frozen page while we redirect.
+function PayingScreen({ step }) {
+  return (
+    <div className="pay-overlay" role="status" aria-live="polite">
+      <div>
+        <div className="spinner" />
+        <h2>{step === "redirecting" ? "Taking you to secure payment…" : "Placing your order…"}</h2>
+        <ul className="pay-progress">
+          <li className={step === "redirecting" ? "done" : "now"}>
+            <span>{step === "redirecting" ? <Check size={14} /> : ""}</span> Order saved
+          </li>
+          <li className={step === "redirecting" ? "now" : ""}>
+            <span /> Connecting to Paystack
+          </li>
+        </ul>
+        <p className="muted"><Lock size={14} style={{ verticalAlign: "-2px" }} /> Please don't close or refresh this page.</p>
+      </div>
+    </div>
+  );
 }
 
 export default function Checkout() {
@@ -29,10 +46,9 @@ export default function Checkout() {
   const [form, setForm] = useState({
     name: "", email: user?.email || "", phone: "",
     street: "", city: "", state: "",
-    payment: "pay-on-delivery",
   });
   const [error, setError] = useState("");
-  const [placing, setPlacing] = useState(false);
+  const [step, setStep] = useState(null); // null | "creating" | "redirecting"
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 
@@ -43,23 +59,35 @@ export default function Checkout() {
       setError("Please fill in every field.");
       return;
     }
-    setPlacing(true);
+
+    setStep("creating");
+    let redirecting = false;
     try {
       const result = await createOrder({
         items: items.map((i) => ({ productId: i.productId, qty: i.qty, variant: i.variant })),
         deliveryAddress: { street: form.street, city: form.city, state: form.state, recipientName: form.name, phone: form.phone },
         couponCode,
         contactEmail: form.email,
-        paymentMethod: form.payment,
+        paymentMethod: "online",
       });
       clearCart();
+      setStep("redirecting");
+      try {
+        redirecting = true;
+        await payNow(result.orderId); // leaves the site for Paystack
+        return;
+      } catch {
+        redirecting = false; // order is saved; the confirmation page offers "Pay now"
+      }
       navigate(`/order-confirmation/${result.orderId}`, { state: result });
     } catch (err) {
       setError(err.message);
     } finally {
-      setPlacing(false);
+      if (!redirecting) setStep(null);
     }
   }
+
+  if (step) return <PayingScreen step={step} />;
 
   if (items.length === 0) {
     return (
@@ -97,17 +125,24 @@ export default function Checkout() {
           </div>
 
           <div className="panel">
-            <h3>Payment method</h3>
-            {PAYMENT_METHODS.map((m) => (
-              <label key={m.id} className={`pay-option ${form.payment === m.id ? "on" : ""}`}>
-                <input type="radio" name="payment" checked={form.payment === m.id} onChange={() => setForm({ ...form, payment: m.id })} />
-                <span><strong>{m.label}</strong><small>{m.hint}</small></span>
-              </label>
-            ))}
+            <h3>Payment</h3>
+            <div className="pay-option on">
+              <Lock size={18} style={{ marginTop: 2, color: "var(--accent)", flexShrink: 0 }} />
+              <span>
+                <strong>Pay securely online</strong>
+                <small>After you continue, you'll pay on Paystack's secure page and come straight back here. Your order is confirmed as soon as payment goes through.</small>
+              </span>
+            </div>
+            <ul className="pay-methods" aria-label="Accepted payment methods">
+              <li><CreditCard size={16} /> Debit card</li>
+              <li><Landmark size={16} /> Bank transfer</li>
+              <li><Smartphone size={16} /> USSD</li>
+            </ul>
+            <p className="muted" style={{ fontSize: 13, margin: 0 }}>We never see or store your card details.</p>
           </div>
 
           {error && <p className="error" role="alert">{error}</p>}
-          <button className="btn" disabled={placing}>{placing ? "Placing order…" : "Place order"}</button>
+          <button className="btn"><Lock size={16} /> Continue to secure payment</button>
         </form>
 
         <aside className="cart-summary">
@@ -119,10 +154,10 @@ export default function Checkout() {
             </div>
           ))}
           <div className="summary-row"><span>Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
-          {couponCode && <div className="summary-row"><span>Code {couponCode}</span><span>applied at checkout</span></div>}
+          {couponCode && <div className="summary-row"><span>Code {couponCode}</span><span>applied at payment</span></div>}
           <div className="summary-row"><span>Delivery</span><span>{DELIVERY_FEE === 0 ? "Free" : formatCurrency(DELIVERY_FEE)}</span></div>
           <div className="summary-row summary-total"><span>{couponCode ? "Total before code" : "Total"}</span><span>{formatCurrency(subtotal + DELIVERY_FEE)}</span></div>
-          <p className="muted" style={{ fontSize: 13, margin: 0 }}>You'll see the final total once the order is placed.</p>
+          <p className="muted" style={{ fontSize: 13, margin: 0 }}>You'll see the final amount on the payment page.</p>
         </aside>
       </div>
     </div>
