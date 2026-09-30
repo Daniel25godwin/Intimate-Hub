@@ -54,18 +54,24 @@ export default function Cart() {
           {items.map((i) => (
             <div key={`${i.productId}::${i.variant || ""}`} className="cart-line">
               {i.image ? <img src={i.image} alt="" /> : <div className="cart-img" />}
-              <div className="cart-line-info">
-                <strong>{i.name}</strong>
-                {i.variant && <span className="muted"> — {i.variant}</span>}
-                <p className="muted">{formatCurrency(i.price)} each</p>
+              <div className="cart-line-body">
+                <div className="cart-line-top">
+                  <div className="cart-line-info">
+                    <strong>{i.name}</strong>
+                    {i.variant && <span className="muted"> — {i.variant}</span>}
+                    <p className="muted">{formatCurrency(i.price)} each</p>
+                  </div>
+                  <button className="cart-remove" onClick={() => removeItem(i.productId, i.variant)} aria-label={`Remove ${i.name}`}>×</button>
+                </div>
+                <div className="cart-line-bottom">
+                  <div className="qty-stepper">
+                    <button onClick={() => setQty(i.productId, i.variant, i.qty - 1)} disabled={i.qty <= 1} aria-label="Decrease quantity">−</button>
+                    <span>{i.qty}</span>
+                    <button onClick={() => setQty(i.productId, i.variant, i.qty + 1)} aria-label="Increase quantity">+</button>
+                  </div>
+                  <strong>{formatCurrency(i.price * i.qty)}</strong>
+                </div>
               </div>
-              <div className="qty-stepper">
-                <button onClick={() => setQty(i.productId, i.variant, i.qty - 1)} disabled={i.qty <= 1} aria-label="Decrease quantity">−</button>
-                <span>{i.qty}</span>
-                <button onClick={() => setQty(i.productId, i.variant, i.qty + 1)} aria-label="Increase quantity">+</button>
-              </div>
-              <strong>{formatCurrency(i.price * i.qty)}</strong>
-              <button className="cart-remove" onClick={() => removeItem(i.productId, i.variant)} aria-label={`Remove ${i.name}`}>×</button>
             </div>
           ))}
           <p style={{ marginTop: 18 }}><Link to="/shop">← Continue shopping</Link></p>

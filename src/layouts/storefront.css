@@ -132,10 +132,6 @@
 .storefront .opt { padding: 9px 16px; border: 1px solid var(--line); border-radius: 999px; background: #fff; font: inherit; cursor: pointer; }
 .storefront .opt:hover { border-color: var(--accent); }
 .storefront .opt.on { border-color: var(--accent); background: var(--soft); color: var(--accent); font-weight: 600; }
-.qty-stepper { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 999px; background: #fff; }
-.qty-stepper button { width: 38px; height: 38px; border: 0; background: none; font-size: 18px; cursor: pointer; border-radius: 50%; color: var(--ink); display: grid; place-items: center; }
-.qty-stepper button:disabled { opacity: .3; cursor: not-allowed; }
-.qty-stepper span { min-width: 28px; text-align: center; font-weight: 600; }
 .buy-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 20px 0 6px; }
 .notice { padding: 10px 14px; border-radius: 10px; background: var(--soft); font-size: 14px; margin-top: 14px; }
 .notice.warn { background: #fdf0d5; color: #7a5200; }
@@ -159,11 +155,6 @@
 
 /* ---------- Cart & checkout ---------- */
 .storefront .cart-layout { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(290px, 1fr); gap: 36px; align-items: start; }
-.cart-line { display: grid; grid-template-columns: 76px 1fr auto auto auto; gap: 16px; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--line); }
-.cart-line > img, .cart-img { width: 76px; height: 76px; border-radius: 10px; object-fit: cover; background: var(--soft); border: 1px solid var(--line); }
-.cart-line-info p { margin: 2px 0 0; font-size: 14px; }
-.cart-remove { background: none; border: 0; font-size: 22px; color: var(--muted); cursor: pointer; line-height: 1; padding: 4px 8px; border-radius: 6px; }
-.cart-remove:hover { color: var(--danger); background: #fdecea; }
 .storefront .cart-summary { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; position: sticky; top: 96px; }
 .cart-summary h3 { margin-top: 0; }
 .cart-summary .row button { padding: 11px 18px; border-radius: 10px; border: 1px solid var(--accent); background: #fff; color: var(--accent); font: inherit; font-weight: 600; cursor: pointer; }
@@ -218,12 +209,25 @@
   .trust { grid-template-columns: 1fr; }
   .storefront .grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
   .storefront .section { padding: 22px 16px; }
-  .cart-line { grid-template-columns: 64px 1fr auto; grid-template-areas: "img info rm" "img qty total"; gap: 8px 12px; }
-  .cart-line > img, .cart-img { grid-area: img; width: 64px; height: 64px; }
-  .cart-line-info { grid-area: info; }
-  .cart-line .qty-stepper { grid-area: qty; justify-self: start; }
-  .cart-line > strong { grid-area: total; justify-self: end; }
-  .cart-remove { grid-area: rm; align-self: start; }
   .steps li + li::before { width: 14px; }
 }
 @media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
+
+/* ---------- Cart line (flex, prefixed so older global CSS can't override it) ---------- */
+.storefront .cart-line { display: flex; gap: 14px; align-items: flex-start; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.storefront .cart-line > img, .storefront .cart-img { flex: 0 0 76px; width: 76px; height: 76px; border-radius: 10px; object-fit: cover; background: var(--soft); border: 1px solid var(--line); }
+.storefront .cart-line-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.storefront .cart-line-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.storefront .cart-line-info { min-width: 0; }
+.storefront .cart-line-info p { margin: 2px 0 0; font-size: 14px; }
+.storefront .cart-line-bottom { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.storefront .cart-line-bottom > strong { white-space: nowrap; }
+.storefront .cart-remove { flex-shrink: 0; background: none; border: 0; font-size: 22px; color: var(--muted); cursor: pointer; line-height: 1; padding: 2px 8px; border-radius: 6px; width: auto; height: auto; }
+.storefront .cart-remove:hover { color: var(--danger); background: #fdecea; }
+.storefront .qty-stepper { display: inline-flex; align-items: center; flex-shrink: 0; border: 1px solid var(--line); border-radius: 999px; background: #fff; }
+.storefront .qty-stepper button { width: 38px; height: 38px; padding: 0; border: 0; background: none; font-size: 18px; line-height: 1; cursor: pointer; border-radius: 50%; color: var(--ink); display: grid; place-items: center; }
+.storefront .qty-stepper button:disabled { opacity: .3; cursor: not-allowed; }
+.storefront .qty-stepper span { min-width: 28px; text-align: center; font-weight: 600; }
+@media (max-width: 640px) {
+  .storefront .cart-line > img, .storefront .cart-img { flex-basis: 64px; width: 64px; height: 64px; }
+}
