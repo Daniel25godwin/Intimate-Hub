@@ -1,4 +1,5 @@
-import { NavLink, Navigate, Outlet, useLocation } from "react-router-dom";
+import { NavLink, Link, Navigate, Outlet, useLocation } from "react-router-dom";
+import { ChevronLeft } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 const TABS = [
@@ -17,13 +18,22 @@ export default function AccountLayout() {
   if (loading) return <div className="section"><div className="skeleton" style={{ minHeight: 200 }} /></div>;
   if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
 
+  const onHome = location.pathname.replace(/\/$/, "") === "/account";
+
   return (
-    <div className="section">
-      <h1>My account</h1>
-      <nav className="acct-tabs" aria-label="Account sections">
-        {TABS.map((t) => <NavLink key={t.to} to={t.to} end={t.end}>{t.label}</NavLink>)}
-      </nav>
-      <div className="acct-body"><Outlet /></div>
+    <div className="section acct">
+      {onHome ? (
+        <Outlet />
+      ) : (
+        <>
+          <Link to="/account" className="acct-back"><ChevronLeft size={20} /> Account</Link>
+          <h1 className="acct-title">My account</h1>
+          <nav className="acct-tabs" aria-label="Account sections">
+            {TABS.map((t) => <NavLink key={t.to} to={t.to} end={t.end}>{t.label}</NavLink>)}
+          </nav>
+          <div className="acct-body"><Outlet /></div>
+        </>
+      )}
     </div>
   );
 }

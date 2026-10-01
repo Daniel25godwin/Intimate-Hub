@@ -165,7 +165,7 @@ export default function Checkout() {
           </div>
 
           {error && <p className="error" role="alert">{error}</p>}
-          <button className="btn"><Lock size={16} /> Continue to secure payment</button>
+          <button className="btn btn-gold"><Lock size={16} /> Continue to secure payment</button>
         </form>
 
         <aside className="cart-summary">

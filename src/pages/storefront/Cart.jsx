@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag, Trash2, ArrowRight } from "lucide-react";
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
 import { previewCoupon } from "../../services/couponService";
@@ -70,7 +70,7 @@ export default function Cart() {
                     {i.variant && <span className="muted"> — {i.variant}</span>}
                     <p className="muted">{formatCurrency(i.price)} each</p>
                   </div>
-                  <button className="cart-remove" onClick={() => removeItem(i.productId, i.variant)} aria-label={`Remove ${i.name}`}>×</button>
+                  <button className="cart-remove" onClick={() => removeItem(i.productId, i.variant)} aria-label={`Remove ${i.name}`}><Trash2 size={18} /></button>
                 </div>
                 <div className="cart-line-bottom">
                   <div className="qty-stepper">
@@ -104,8 +104,8 @@ export default function Cart() {
           <div className="summary-row"><span>Delivery</span><span>{DELIVERY_FEE === 0 ? "Free" : formatCurrency(DELIVERY_FEE)}</span></div>
           <div className="summary-row summary-total"><span>Total</span><span>{formatCurrency(total)}</span></div>
 
-          <button className="btn" style={{ width: "100%" }} onClick={goCheckout}>
-            {user ? "Continue to checkout" : "Sign up to check out"}
+          <button className="btn btn-gold" style={{ width: "100%" }} onClick={goCheckout}>
+            {user ? "Proceed to Checkout" : "Sign up to check out"} <ArrowRight size={18} />
           </button>
           {!user && <p className="muted" style={{ fontSize: 13, marginTop: 10 }}>It's free and quick. Your cart is saved, and you can track your order afterwards.</p>}
           <p className="muted" style={{ fontSize: 13, marginTop: 12, marginBottom: 0 }}>Free delivery on every order.</p>

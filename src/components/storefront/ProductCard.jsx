@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, ShoppingCart, Check, X } from "lucide-react";
+import { Eye, ShoppingCart, Check, X, Star } from "lucide-react";
 import { useCart } from "../../context/CartContext";
 import { optimizedUrl } from "../../services/imageService";
 import { formatCurrency } from "../../utils/format";
@@ -59,6 +59,8 @@ export default function ProductCard({ product: p }) {
     setQuick(false);
   }
 
+  const rating = Number(p.rating ?? p.ratingAverage ?? p.avgRating) || 0;
+
   return (
     <article className="pc">
       <div className="pc-media">
@@ -66,24 +68,30 @@ export default function ProductCard({ product: p }) {
           {p.images?.[0] && <img src={optimizedUrl(p.images[0], 500)} alt="" loading="lazy" />}
         </Link>
         <div className="pc-badges">
-          {out ? <span className="pc-badge out">SOLD OUT</span> : <>
+          {out ? <span className="pc-badge out">Sold out</span> : <>
             {onSale && <span className="pc-badge sale">-{percent}%</span>}
-            {p.isNew && <span className="pc-badge">NEW</span>}
+            {p.isNew && <span className="pc-badge">New</span>}
           </>}
         </div>
-        <button className="pc-eye" onClick={() => setQuick(true)} aria-label={`Quick view ${p.name}`}><Eye size={20} /></button>
+        <button className="pc-eye" onClick={() => setQuick(true)} aria-label={`Quick view ${p.name}`}><Eye size={18} /></button>
       </div>
 
       <div className="pc-body">
         <Link to={href} className="pc-name">{p.name}</Link>
-        <div className="pc-price">{formatCurrency(price)}{onSale && <s>{formatCurrency(p.price)}</s>}</div>
-        <button
-          className={`pc-add ${added ? "added" : ""}`}
-          disabled={out}
-          onClick={added ? () => navigate("/cart") : add}
-        >
-          {out ? "Sold out" : added ? <><Check size={18} /> Added · View cart</> : <><ShoppingCart size={18} /> {hasVariants ? "Select options" : "Add to cart"}</>}
-        </button>
+        {rating > 0 && p.ratingCount > 0 && (
+          <div className="pc-rate"><Star size={13} fill="currentColor" /> {rating.toFixed(1)} <span>({p.ratingCount})</span></div>
+        )}
+        <div className="pc-foot">
+          <div className="pc-price">{formatCurrency(price)}{onSale && <s>{formatCurrency(p.price)}</s>}</div>
+          <button
+            className={`pc-add ${added ? "added" : ""}`}
+            disabled={out}
+            onClick={added ? () => navigate("/cart") : add}
+            aria-label={out ? "Sold out" : added ? "Added. View cart" : hasVariants ? `Select options for ${p.name}` : `Add ${p.name} to cart`}
+          >
+            {added ? <Check size={18} /> : <ShoppingCart size={18} />}
+          </button>
+        </div>
       </div>
 
       {quick && <QuickView product={p} price={price} onSale={onSale} out={out} hasVariants={hasVariants} href={href} onAdd={add} onClose={() => setQuick(false)} />}

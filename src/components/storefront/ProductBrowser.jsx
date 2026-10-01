@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { SlidersHorizontal, X, Search, Tag } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
+import { SlidersHorizontal, X, Search, Tag, ArrowRight } from "lucide-react";
 import ProductCard from "./ProductCard";
 import { getEnabledProducts } from "../../services/productService";
 import { listCategories } from "../../services/categoryService";
@@ -16,11 +16,11 @@ export default function ProductBrowser({ embedded = false }) {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
-  const [shown, setShown] = useState(PAGE);
+  const [shown, setShown] = useState(embedded ? 8 : PAGE);
 
   const category = params.get("category") || "";
   const search = params.get("q") || "";
-  const sort = params.get("sort") || "latest";
+  const sort = params.get("sort") || (embedded ? "popular" : "latest");
   const onlySale = params.get("sale") === "1";
   const min = params.get("min") || "";
   const max = params.get("max") || "";
@@ -69,7 +69,7 @@ export default function ProductBrowser({ embedded = false }) {
       : t(b) - t(a));
   }, [products, category, search, onlySale, min, max, sort]);
 
-  useEffect(() => { setShown(PAGE); }, [category, search, sort, onlySale, min, max]);
+  useEffect(() => { setShown(embedded ? 8 : PAGE); }, [category, search, sort, onlySale, min, max, embedded]);
 
   const counts = useMemo(() => {
     const c = {};
@@ -97,31 +97,49 @@ export default function ProductBrowser({ embedded = false }) {
 
   return (
     <section className="pb" id="products">
-      <Heading className="pb-title">{activeCat ? activeCat.name : "Shop all products"}</Heading>
-      <p className="pb-count" aria-live="polite">
-        {loading ? "Loading products…" : list.length === 0 ? "No products found" : `Showing 1–${Math.min(shown, list.length)} of ${list.length} products`}
-      </p>
-
-      <div className="pb-bar">
-        <button className="pb-filter-btn" onClick={() => setOpen(true)}><SlidersHorizontal size={20} /> Filters{hasFilters ? ` (${chips.length})` : ""}</button>
-        <select className="pb-sort" value={sort} onChange={(e) => update({ sort: e.target.value === "latest" ? "" : e.target.value })} aria-label="Sort products">
-          <option value="latest">Latest</option>
-          <option value="popular">Popular</option>
-          <option value="featured">Featured</option>
-          <option value="price-asc">Price: low to high</option>
-          <option value="price-desc">Price: high to low</option>
-        </select>
-      </div>
-
-      {chips.length > 0 && (
-        <div className="pb-active">
-          {chips.map((c) => <button key={c.label} className="pb-chip" onClick={c.clear}>{c.label} <X size={14} /></button>)}
-          <button className="link-btn" onClick={clearAll}>Clear all</button>
+      {embedded ? (
+        <div className="pb-head">
+          <Heading className="pb-title">Best Sellers</Heading>
+          <Link to="/shop" className="pb-all">View All <ArrowRight size={16} /></Link>
         </div>
+      ) : (
+        <>
+          <Heading className="pb-title">{activeCat ? activeCat.name : "Shop all products"}</Heading>
+          <p className="pb-count" aria-live="polite">
+            {loading ? "Loading products…" : list.length === 0 ? "No products found" : `Showing 1–${Math.min(shown, list.length)} of ${list.length} products`}
+          </p>
+
+          <div className="pb-cats" role="tablist" aria-label="Categories">
+            <button className={`pb-pill ${!category ? "on" : ""}`} onClick={() => update({ category: "" })}>All</button>
+            {categories.map((c) => (
+              <button key={c.id} className={`pb-pill ${category === c.id ? "on" : ""}`} onClick={() => update({ category: c.id })}>{c.name}</button>
+            ))}
+          </div>
+
+          <div className="pb-bar">
+            <button className="pb-filter-btn" onClick={() => setOpen(true)}><SlidersHorizontal size={18} /> Filters{hasFilters ? ` (${chips.length})` : ""}</button>
+            <select className="pb-sort" value={sort} onChange={(e) => update({ sort: e.target.value === "latest" ? "" : e.target.value })} aria-label="Sort products">
+              <option value="latest">Latest</option>
+              <option value="popular">Popular</option>
+              <option value="featured">Featured</option>
+              <option value="price-asc">Price: low to high</option>
+              <option value="price-desc">Price: high to low</option>
+            </select>
+          </div>
+
+          {chips.length > 0 && (
+            <div className="pb-active">
+              {chips.map((c) => <button key={c.label} className="pb-chip" onClick={c.clear}>{c.label} <X size={14} /></button>)}
+              <button className="link-btn" onClick={clearAll}>Clear all</button>
+            </div>
+          )}
+        </>
       )}
 
-      <div className="pb-layout">
-        <aside className={`fp ${open ? "open" : ""}`} aria-label="Filters">
+      <div className={`pb-layout ${embedded ? "embedded" : ""}`}>
+        {!embedded && (
+          <>
+            <aside className={`fp ${open ? "open" : ""}`} aria-label="Filters">
           <div className="fp-head">
             <span><SlidersHorizontal size={20} /> Filters</span>
             <button className="fp-x" onClick={() => setOpen(false)} aria-label="Close filters"><X size={24} /></button>
@@ -154,10 +172,12 @@ export default function ProductBrowser({ embedded = false }) {
           </div>
         </aside>
         {open && <div className="fp-scrim" onClick={() => setOpen(false)} />}
+          </>
+        )}
 
         <div>
           {loading ? (
-            <div className="grid">{Array.from({ length: 8 }).map((_, i) => <div key={i} className="skeleton" />)}</div>
+            <div className="grid">{Array.from({ length: embedded ? 4 : 8 }).map((_, i) => <div key={i} className="skeleton" />)}</div>
           ) : list.length === 0 ? (
             <div className="empty">
               <div className="empty-icon"><Search size={26} /></div>
@@ -168,7 +188,7 @@ export default function ProductBrowser({ embedded = false }) {
           ) : (
             <>
               <div className="grid">{visible.map((p) => <ProductCard key={p.id} product={p} />)}</div>
-              {shown < list.length && (
+              {!embedded && shown < list.length && (
                 <div className="pb-more">
                   <button className="btn btn-outline" onClick={() => setShown((s) => s + PAGE)}>Show more products ({list.length - shown} left)</button>
                 </div>

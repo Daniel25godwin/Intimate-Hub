@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { Minus, Plus, Truck, Banknote, Heart } from "lucide-react";
+import { Minus, Plus, Truck, Banknote, Heart, ShoppingCart } from "lucide-react";
 import { getProductBySlug } from "../../services/productService";
 import { formatCurrency } from "../../utils/format";
 import { optimizedUrl } from "../../services/imageService";
@@ -112,7 +112,7 @@ export default function ProductDetail() {
               <span aria-live="polite">{qty}</span>
               <button type="button" onClick={() => setQty(Math.min(maxQty, qty + 1))} disabled={out || qty >= maxQty} aria-label="Increase quantity"><Plus size={16} /></button>
             </div>
-            <button className="btn btn-full" onClick={() => handleAdd(false)} disabled={out}>Add to cart</button>
+            <button className="btn btn-full" onClick={() => handleAdd(false)} disabled={out}><ShoppingCart size={18} /> Add to Cart</button>
             <button className="btn btn-outline btn-full" onClick={() => handleAdd(true)} disabled={out}>Buy now</button>
             <button type="button" className="icon-btn" aria-pressed={saved} aria-label={saved ? "Remove from wishlist" : "Save to wishlist"} onClick={toggleSave}>
               <Heart size={20} fill={saved ? "currentColor" : "none"} />

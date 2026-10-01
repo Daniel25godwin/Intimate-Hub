@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Outlet, Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, Search, ShoppingCart, User, Store, SlidersHorizontal, MessageCircle } from "lucide-react";
+import { Menu, X, Search, ShoppingCart, User, Home, LayoutGrid, MessageCircle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { logoutUser } from "../services/authService";
@@ -8,15 +8,32 @@ import { listCategories } from "../services/categoryService";
 import { BRAND } from "../config/brand";
 import "./storefront.css";
 
+function Mark() {
+  return (
+    <svg className="hdr-mark" viewBox="0 0 64 56" aria-hidden="true">
+      <defs>
+        <linearGradient id="tp-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#f6bf4a" /><stop offset="1" stopColor="#c98414" /></linearGradient>
+      </defs>
+      <path d="M4 6h34v9H26v35h-9V15H4z" fill="url(#tp-gold)" />
+      <path fillRule="evenodd" d="M36 6h18a13 13 0 0 1 0 26h-8v18H36zM46 15v8h7a4 4 0 0 0 0-8z" fill="#151515" />
+    </svg>
+  );
+}
+
 function Logo() {
   if (BRAND.logo) return <img src={BRAND.logo} alt={BRAND.name} className="hdr-logo-img" />;
-  return <span className="hdr-brand"><b>{BRAND.name}</b>{BRAND.tagline && <small>{BRAND.tagline}</small>}</span>;
+  return (
+    <>
+      <Mark />
+      <span className="hdr-brand"><b>{BRAND.name}</b>{BRAND.tagline && <small>{BRAND.tagline}</small>}</span>
+    </>
+  );
 }
 
 export default function StorefrontLayout() {
   const { user, isAdmin } = useAuth();
   const { itemCount } = useCart();
-  const { pathname, search } = useLocation();
+  const { pathname } = useLocation();
   const navigate = useNavigate();
   const [menu, setMenu] = useState(false);
   const [q, setQ] = useState("");
@@ -45,14 +62,8 @@ export default function StorefrontLayout() {
     navigate(q.trim() ? `/shop?q=${encodeURIComponent(q.trim())}` : "/shop");
   }
 
-  function openFilters() {
-    const onList = pathname === "/" || pathname === "/shop";
-    const sp = new URLSearchParams(onList ? search : "");
-    sp.set("filters", "1");
-    navigate({ pathname: pathname === "/" ? "/" : "/shop", search: `?${sp}` });
-  }
-
-  const shopActive = pathname === "/" || pathname.startsWith("/shop") || pathname.startsWith("/product");
+  const homeActive = pathname === "/";
+  const shopActive = pathname.startsWith("/shop") || pathname.startsWith("/product");
   const hideTabs = pathname.startsWith("/product") || pathname.startsWith("/checkout");
 
   return (
@@ -67,7 +78,7 @@ export default function StorefrontLayout() {
             {user ? <button type="button" onClick={logoutUser}>Log out</button> : <NavLink to="/login">Sign in</NavLink>}
           </nav>
           <div className="hdr-icons">
-            <Link to={user ? "/account" : "/login"} className="hdr-btn" aria-label="Account"><User size={26} /></Link>
+            <Link to={user ? "/account" : "/login"} className="hdr-btn hdr-acct" aria-label="Account"><User size={26} /></Link>
             <Link to="/cart" className="hdr-btn hdr-cart" aria-label={`Cart, ${itemCount} items`}>
               <ShoppingCart size={26} />
               {itemCount > 0 && <span className="hdr-count">{itemCount}</span>}
@@ -139,12 +150,12 @@ export default function StorefrontLayout() {
 
       {!hideTabs && (
         <nav className="tabbar" aria-label="Quick navigation">
-          <Link to="/shop" className={shopActive ? "active" : ""}><Store size={26} />Shop</Link>
+          <Link to="/" className={homeActive ? "active" : ""}><Home size={24} />Home</Link>
+          <Link to="/shop" className={shopActive ? "active" : ""}><LayoutGrid size={24} />Shop</Link>
           <Link to="/cart" className={pathname.startsWith("/cart") ? "active" : ""}>
-            <ShoppingCart size={26} />Cart{itemCount > 0 && <span className="cnt">{itemCount}</span>}
+            <ShoppingCart size={24} />Cart{itemCount > 0 && <span className="cnt">{itemCount}</span>}
           </Link>
-          <button onClick={openFilters}><SlidersHorizontal size={26} />Filters</button>
-          <Link to={user ? "/account" : "/login"} className={pathname.startsWith("/account") ? "active" : ""}><User size={26} />Account</Link>
+          <Link to={user ? "/account" : "/login"} className={pathname.startsWith("/account") ? "active" : ""}><User size={24} />Account</Link>
         </nav>
       )}
     </div>
