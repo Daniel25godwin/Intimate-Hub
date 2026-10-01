@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { Minus, Plus, Truck, Banknote, Heart, ShoppingCart } from "lucide-react";
+import { Minus, Plus, Truck, Banknote, Heart, ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
 import { getProductBySlug } from "../../services/productService";
 import { formatCurrency } from "../../utils/format";
 import { optimizedUrl } from "../../services/imageService";
@@ -19,6 +19,8 @@ export default function ProductDetail() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [saved, setSaved] = useState(false);
+  const touchX = useRef(null);
+  const thumbsRef = useRef(null);
 
   useEffect(() => {
     setProduct(undefined); setActive(0); setSelected({}); setQty(1); setNotice(null);
@@ -28,6 +30,11 @@ export default function ProductDetail() {
   useEffect(() => {
     if (user && product?.id) getWishlistIds(user.uid).then((ids) => setSaved(ids.includes(product.id))).catch(() => {});
   }, [user, product?.id]);
+
+  // keep the selected thumbnail in view when the picture changes
+  useEffect(() => {
+    thumbsRef.current?.querySelector("img.on")?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+  }, [active]);
 
   if (product === undefined) return <div className="section"><div className="skeleton" style={{ minHeight: 420 }} /></div>;
   if (product === null) {
@@ -46,6 +53,8 @@ export default function ProductDetail() {
   const out = product.stock <= 0;
   const stockClass = out ? "out" : product.stock <= 5 ? "low" : "";
   const stockLabel = out ? "Out of stock" : product.stock <= 5 ? `Only ${product.stock} left` : "In stock";
+  const count = product.images?.length || 0;
+  const go = (n) => setActive((n + count) % count);
   const maxQty = product.stock > 0 ? product.stock : 1;
 
   const missingVariant = (product.variants || []).find((v) => !selected[v.name]);
@@ -73,9 +82,32 @@ export default function ProductDetail() {
       <div className="crumbs"><Link to="/shop">Shop</Link> / {product.name}</div>
       <div className="detail">
         <div>
-          {product.images?.[active] && <img className="detail-main" src={optimizedUrl(product.images[active], 900)} alt={product.name} />}
-          {product.images?.length > 1 && (
-            <div className="thumbs">
+          {product.images?.[active] && (
+            <div
+              className="gallery"
+              tabIndex={0}
+              role="region" aria-roledescription="carousel" aria-label="Product photos"
+              onKeyDown={(e) => { if (count > 1 && e.key === "ArrowLeft") go(active - 1); if (count > 1 && e.key === "ArrowRight") go(active + 1); }}
+              onTouchStart={(e) => { touchX.current = e.touches[0].clientX; }}
+              onTouchEnd={(e) => {
+                if (count < 2 || touchX.current === null) return;
+                const dx = e.changedTouches[0].clientX - touchX.current;
+                touchX.current = null;
+                if (Math.abs(dx) > 40) go(active + (dx < 0 ? 1 : -1));
+              }}
+            >
+              <img className="detail-main" src={optimizedUrl(product.images[active], 900)} alt={product.name} draggable={false} />
+              {count > 1 && (
+                <>
+                  <button type="button" className="sl-arrow left" onClick={() => go(active - 1)} aria-label="Previous photo"><ChevronLeft size={22} /></button>
+                  <button type="button" className="sl-arrow right" onClick={() => go(active + 1)} aria-label="Next photo"><ChevronRight size={22} /></button>
+                  <span className="gallery-count" aria-live="polite">{active + 1} / {count}</span>
+                </>
+              )}
+            </div>
+          )}
+          {count > 1 && (
+            <div className="thumbs" ref={thumbsRef}>
               {product.images.map((img, i) => (
                 <img key={img} src={optimizedUrl(img, 120)} alt={`View ${i + 1}`} onClick={() => setActive(i)} className={i === active ? "on" : ""} />
               ))}
