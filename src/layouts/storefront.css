@@ -631,3 +631,9 @@ html { scroll-behavior: smooth; }
   .storefront a.acct-back { display: inline-flex; align-items: center; gap: 2px; font-weight: 600; margin-bottom: 10px; text-decoration: none; }
   .acct-title, .acct-tabs { display: none; }
 }
+
+/* phones: always two products per row */
+@media (max-width: 640px) {
+  .storefront .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .pc-price { font-size: 15px; }
+}
