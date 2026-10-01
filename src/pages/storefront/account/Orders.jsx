@@ -16,9 +16,14 @@ export default function Orders() {
   const [orders, setOrders] = useState(null);
   const [payingId, setPayingId] = useState(null);
   const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
-    if (user) getMyOrders(user.uid).then(setOrders).catch(() => setOrders([]));
+    if (!user) return;
+    setLoadError("");
+    getMyOrders(user.uid)
+      .then(setOrders)
+      .catch((err) => { console.error("Could not load orders:", err); setLoadError(err.message || "Unknown error"); setOrders([]); });
   }, [user]);
 
   async function pay(id) {
@@ -27,6 +32,17 @@ export default function Orders() {
   }
 
   if (authLoading || orders === null) return <div className="section"><div className="skeleton" style={{ minHeight: 200 }} /></div>;
+
+  if (loadError) {
+    return (
+      <div className="section empty">
+        <h2>We couldn't load your orders</h2>
+        <p className="error" role="alert">{loadError}</p>
+        <p className="muted">Your orders are safe. Please try again in a moment.</p>
+        <button className="btn" onClick={() => window.location.reload()}>Try again</button>
+      </div>
+    );
+  }
 
   if (orders.length === 0) {
     return (

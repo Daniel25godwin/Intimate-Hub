@@ -13,7 +13,13 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: "Method not allowed" });
   }
 
-  const decodedUser = await verifyRequestUser(req); // null = guest checkout
+  const decodedUser = await verifyRequestUser(req);
+  if (!decodedUser) {
+    return res.status(401).json({ message: "Please sign in to place an order" });
+  }
+  if (decodedUser.email_verified === false) {
+    return res.status(403).json({ message: "Please verify your email before placing an order" });
+  }
   const { items, deliveryAddress, couponCode, paymentMethod, contactEmail } = req.body || {};
   const METHODS = ["online"];
   if (!METHODS.includes(paymentMethod)) {

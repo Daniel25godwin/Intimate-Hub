@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ShoppingBag } from "lucide-react";
 import { useCart } from "../../context/CartContext";
+import { useAuth } from "../../context/AuthContext";
 import { previewCoupon } from "../../services/couponService";
 import { formatCurrency } from "../../utils/format";
 import CheckoutSteps from "../../components/storefront/CheckoutSteps";
@@ -11,6 +12,7 @@ const DELIVERY_FEE = 0; // free delivery — must match the fee set in /api/orde
 export default function Cart() {
   const { items, setQty, removeItem, subtotal } = useCart();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [code, setCode] = useState("");
   const [coupon, setCoupon] = useState(null); // { code, discount }
   const [couponError, setCouponError] = useState("");
@@ -29,6 +31,13 @@ export default function Cart() {
     } finally {
       setChecking(false);
     }
+  }
+
+  // Guests create an account first; the cart is kept, and they return to checkout afterwards.
+  function goCheckout() {
+    try { coupon ? sessionStorage.setItem("ih_coupon", coupon.code) : sessionStorage.removeItem("ih_coupon"); } catch { /* ignore */ }
+    if (user) navigate("/checkout", { state: { couponCode: coupon?.code || null } });
+    else navigate("/register", { state: { from: { pathname: "/checkout" } } });
   }
 
   const discount = coupon?.discount || 0;
@@ -95,10 +104,11 @@ export default function Cart() {
           <div className="summary-row"><span>Delivery</span><span>{DELIVERY_FEE === 0 ? "Free" : formatCurrency(DELIVERY_FEE)}</span></div>
           <div className="summary-row summary-total"><span>Total</span><span>{formatCurrency(total)}</span></div>
 
-          <button className="btn" style={{ width: "100%" }} onClick={() => navigate("/checkout", { state: { couponCode: coupon?.code || null } })}>
-            Continue to checkout
+          <button className="btn" style={{ width: "100%" }} onClick={goCheckout}>
+            {user ? "Continue to checkout" : "Sign up to check out"}
           </button>
-          <p className="muted" style={{ fontSize: 13, marginTop: 12, marginBottom: 0 }}>Discreet packaging on every order.</p>
+          {!user && <p className="muted" style={{ fontSize: 13, marginTop: 10 }}>It's free and quick. Your cart is saved, and you can track your order afterwards.</p>}
+          <p className="muted" style={{ fontSize: 13, marginTop: 12, marginBottom: 0 }}>Free delivery on every order.</p>
         </aside>
       </div>
     </div>

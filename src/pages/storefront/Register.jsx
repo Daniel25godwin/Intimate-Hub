@@ -78,7 +78,7 @@ export default function Register() {
     <AuthShell>
       <Link to="/login" className="auth-back"><ArrowLeft size={16} /> Back</Link>
       <h1 className="auth-title">Create account</h1>
-      <p className="auth-sub">Private by default. Track orders and save your favourites.</p>
+      <p className="auth-sub">Track your orders and save your favourites.</p>
 
       {error && <div className="auth-error" role="alert">{error}</div>}
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Lock, CreditCard, Landmark, Smartphone, Check } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
@@ -8,6 +8,7 @@ import { formatCurrency } from "../../utils/format";
 import CheckoutSteps from "../../components/storefront/CheckoutSteps";
 import { payNow } from "../../services/paymentService";
 import { getCheckoutDefaults } from "../../services/accountService";
+import { needsVerification } from "../../services/authService";
 
 const DELIVERY_FEE = 0; // free delivery — must match the fee set in /api/orders/create
 
@@ -39,10 +40,12 @@ function PayingScreen({ step }) {
 
 export default function Checkout() {
   const { items, subtotal, clearCart } = useCart();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const couponCode = location.state?.couponCode || null;
+  let storedCoupon = null;
+  try { storedCoupon = sessionStorage.getItem("ih_coupon"); } catch { /* ignore */ }
+  const couponCode = location.state?.couponCode || storedCoupon || null;
 
   const [form, setForm] = useState({
     name: "", email: user?.email || "", phone: "",
@@ -57,6 +60,7 @@ export default function Checkout() {
     getCheckoutDefaults(user.uid)
       .then((d) => setForm((f) => ({
         ...f,
+        email: f.email || user.email || "",
         name: f.name || d.name || "", phone: f.phone || d.phone || "",
         street: f.street || d.street || "", city: f.city || d.city || "", state: f.state || d.state || "",
       })))
@@ -84,6 +88,7 @@ export default function Checkout() {
         paymentMethod: "online",
       });
       clearCart();
+      try { sessionStorage.removeItem("ih_coupon"); } catch { /* ignore */ }
       setStep("redirecting");
       try {
         redirecting = true;
@@ -99,6 +104,11 @@ export default function Checkout() {
       if (!redirecting) setStep(null);
     }
   }
+
+  // Checkout is for signed-in, verified customers only.
+  if (authLoading) return <div className="section"><div className="skeleton" style={{ minHeight: 300 }} /></div>;
+  if (!user) return <Navigate to="/register" replace state={{ from: location }} />;
+  if (needsVerification(user)) return <Navigate to="/verify-email" replace state={{ email: user.email, from: location }} />;
 
   if (step) return <PayingScreen step={step} />;
 
@@ -134,7 +144,7 @@ export default function Checkout() {
               <Field label="City"><input value={form.city} onChange={set("city")} autoComplete="address-level2" required /></Field>
               <Field label="State"><input value={form.state} onChange={set("state")} autoComplete="address-level1" required /></Field>
             </div>
-            <p className="muted" style={{ fontSize: 13, margin: 0 }}>Shipped in plain, unbranded packaging.</p>
+            <p className="muted" style={{ fontSize: 13, margin: 0 }}>Free delivery on every order.</p>
           </div>
 
           <div className="panel">

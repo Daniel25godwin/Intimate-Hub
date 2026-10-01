@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { Minus, Plus, Package, Banknote, Heart } from "lucide-react";
+import { Minus, Plus, Truck, Banknote, Heart } from "lucide-react";
 import { getProductBySlug } from "../../services/productService";
 import { formatCurrency } from "../../utils/format";
 import { optimizedUrl } from "../../services/imageService";
@@ -127,7 +127,7 @@ export default function ProductDetail() {
           )}
 
           <ul className="assure">
-            <li><Package size={18} /> Ships in plain, unbranded packaging</li>
+            <li><Truck size={18} /> Free delivery on every order</li>
             <li><Banknote size={18} /> Secure online payment — card, bank transfer or USSD</li>
           </ul>
 

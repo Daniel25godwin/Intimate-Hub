@@ -22,7 +22,7 @@ export default function OrderConfirmation() {
   }
 
   let message = "We'll be in touch to confirm delivery.";
-  if (paid) message = "Payment received. We'll be in touch to confirm delivery.";
+  if (paid) message = "Your payment went through, and we'll be in touch about delivery.";
   else if (online) message = "Your order is saved, but payment isn't complete yet. Finish paying to confirm it.";
 
   return (
@@ -31,8 +31,7 @@ export default function OrderConfirmation() {
       <div className="auth-success" style={{ margin: "0 auto 16px" }}><Check size={26} strokeWidth={2.5} /></div>
       <h1>{paid ? "Payment received" : "Order placed"}</h1>
       <p className="muted">
-        Order <strong>{order?.orderNumber || orderId}</strong> has been received. {message}
-        {" "}Packaging is always plain and unbranded.
+        Order <strong>{order?.orderNumber || orderId}</strong> {paid ? "is confirmed." : "has been received."} {message}
       </p>
       {order?.total != null && (
         <div className="summary-row summary-total" style={{ justifyContent: "center", gap: 10, border: 0 }}>
