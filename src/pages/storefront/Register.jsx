@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
-import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../firebase/config";
 import { ensureUserProfile } from "../../services/authService";
+import { sendVerificationEmail } from "../../services/emailService";
 import { useSocialSignIn } from "../../hooks/useSocialSignIn";
 import { isValidEmail, validatePassword, strengthMeta } from "../../utils/authHelpers";
 import AuthShell from "../../components/storefront/AuthShell";
@@ -55,7 +56,11 @@ export default function Register() {
     setLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      await sendEmailVerification(userCredential.user);
+      try {
+        await sendVerificationEmail();
+      } catch (e) {
+        console.error(e); // they can still resend from the verify screen
+      }
       // Best-effort: also re-checked when they finish verifying.
       ensureUserProfile(userCredential.user).catch(console.error);
       navigate("/verify-email", { state: { email } });

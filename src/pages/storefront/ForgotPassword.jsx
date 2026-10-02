@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Check } from "lucide-react";
-import { sendPasswordResetEmail } from "firebase/auth";
-import { auth } from "../../firebase/config";
+import { sendPasswordReset } from "../../services/emailService";
 import AuthShell from "../../components/storefront/AuthShell";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -24,7 +23,7 @@ export default function ForgotPassword() {
 
     setLoading(true);
     try {
-      await sendPasswordResetEmail(auth, email);
+      await sendPasswordReset(email.trim());
       setSent(true);
     } catch (err) {
       setError(err.message);

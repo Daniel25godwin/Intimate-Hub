@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Check, Clock } from "lucide-react";
-import { sendEmailVerification, signOut } from "firebase/auth";
+import { signOut } from "firebase/auth";
 import { auth } from "../../firebase/config";
 import { useAuth } from "../../context/AuthContext";
 import { ensureUserProfile } from "../../services/authService";
+import { sendVerificationEmail } from "../../services/emailService";
 import AuthShell from "../../components/storefront/AuthShell";
 
 // SIGN UP — STEP 2 (verify email)
@@ -29,11 +30,11 @@ export default function VerifyEmail() {
     if (resendState === "sending" || resendCooldown > 0) return;
     setResendState("sending");
     try {
-      await sendEmailVerification(auth.currentUser);
+      await sendVerificationEmail();
       setResendState("sent");
       setResendCooldown(30);
     } catch (err) {
-      // Too-many-requests means Firebase is rate-limiting resend attempts;
+      // Too-many-requests means resend attempts are being rate-limited;
       // surface a friendlier message than the raw error.
       setResendState(err.code === "auth/too-many-requests" ? "error-rate-limited" : "error");
     }
