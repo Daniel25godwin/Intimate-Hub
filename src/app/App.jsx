@@ -18,6 +18,7 @@ import Login from "../pages/storefront/Login";
 import Register from "../pages/storefront/Register";
 import ForgotPassword from "../pages/storefront/ForgotPassword";
 import VerifyEmail from "../pages/storefront/VerifyEmail";
+import AuthAction from "../pages/storefront/AuthAction";
 
 import AccountOverview from "../pages/storefront/account/Overview";
 import AccountOrders from "../pages/storefront/account/Orders";
@@ -50,6 +51,7 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/auth/action" element={<AuthAction />} />
 
           {/* Storefront */}
           <Route element={<StorefrontLayout />}>
