@@ -7,24 +7,13 @@ import { logoutUser } from "../services/authService";
 import { listCategories } from "../services/categoryService";
 import { BRAND } from "../config/brand";
 import "./storefront.css";
-
-function Mark() {
-  return (
-    <svg className="hdr-mark" viewBox="0 0 64 56" aria-hidden="true">
-      <defs>
-        <linearGradient id="tp-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#f6bf4a" /><stop offset="1" stopColor="#c98414" /></linearGradient>
-      </defs>
-      <path d="M4 6h34v9H26v35h-9V15H4z" fill="url(#tp-gold)" />
-      <path fillRule="evenodd" d="M36 6h18a13 13 0 0 1 0 26h-8v18H36zM46 15v8h7a4 4 0 0 0 0-8z" fill="#151515" />
-    </svg>
-  );
-}
+import "./brand-logo.css";
+import "./theme-green.css";
 
 function Logo() {
   if (BRAND.logo) return <img src={BRAND.logo} alt={BRAND.name} className="hdr-logo-img" />;
   return (
     <>
-      <Mark />
       <span className="hdr-brand"><b>{BRAND.name}</b>{BRAND.tagline && <small>{BRAND.tagline}</small>}</span>
     </>
   );
@@ -67,7 +56,7 @@ export default function StorefrontLayout() {
   const hideTabs = pathname.startsWith("/product") || pathname.startsWith("/checkout");
 
   return (
-    <div className="storefront">
+    <div className={`storefront${BRAND.theme ? ` theme-${BRAND.theme}` : ""}`}>
       <header className="hdr">
         <div className="hdr-in">
           <button className="hdr-btn hdr-burger" onClick={() => setMenu(true)} aria-label="Open menu"><Menu size={28} /></button>
@@ -118,7 +107,9 @@ export default function StorefrontLayout() {
       <footer className="storefront-footer">
         <div className="ft-in">
           <div>
-            <div className="ft-logo">{BRAND.name}</div>
+            {BRAND.logo
+              ? <span className="ft-logo-chip"><img src={BRAND.logo} alt={BRAND.name} /></span>
+              : <div className="ft-logo">{BRAND.name}</div>}
             <p>{BRAND.freeDelivery}. Secure online payment.</p>
           </div>
           <div>

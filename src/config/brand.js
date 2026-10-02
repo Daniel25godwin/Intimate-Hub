@@ -1,3 +1,4 @@
+import logo from "../assets/logo.png";
 import slide1 from "../assets/banners/slide-1.jpg";
 import slide2 from "../assets/banners/slide-2.jpg";
 import slide3 from "../assets/banners/slide-3.jpg";
@@ -6,8 +7,9 @@ import slide3 from "../assets/banners/slide-3.jpg";
 export const BRAND = {
   name: "Perfect Touch",
   tagline: "Online store",          // small line under the name in the header ("" to hide)
-  logo: "",                          // optional: e.g. "/logo.png" (put the file in /public). Replaces the text name.
+  logo: logo,                        // imported from src/assets/logo.png. Replaces the text name in the header and footer.
   whatsapp: "2348138275031",        // e.g. "2348012345678" (country code, no +). Shows a WhatsApp button when set.
+  theme: "",                         // "" = current colours. "green" = Perfect Touch green theme (see theme-green.css).
   freeDelivery: "Free delivery on every order",
   designer: { name: "Kerrry Web", whatsapp: "2348138275031", text: "Hi Kerrry Web, I saw your work on Perfect Touch and I'd like to talk about a website." },
   supportEmail: "",                  // shown in the Terms and Privacy pages, e.g. "support@yourstore.com"

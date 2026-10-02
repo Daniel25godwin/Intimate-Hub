@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { NavLink, Link, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { BRAND } from "../config/brand";
 import "./admin.css";
 
 const NAV = [
@@ -42,7 +43,10 @@ export default function AdminLayout() {
   return (
     <div className="admin">
       <aside className={`a-sidebar ${open ? "is-open" : ""}`} aria-label="Admin navigation">
-        <div className="a-brand">Admin</div>
+        <div className="a-brand">
+          {BRAND.logo && <img src={BRAND.logo} alt={BRAND.name} style={{ height: 34, width: "auto", display: "block", marginBottom: 6 }} />}
+          Admin
+        </div>
         <nav className="a-nav">
           {NAV.map((g) => (
             <div key={g.group} className="a-nav-group">

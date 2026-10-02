@@ -1,0 +1,7 @@
+/* Perfect Touch logo sizing. Loaded after storefront.css; no colours are changed here. */
+.hdr-logo-img { height: 44px; width: auto; max-width: 200px; display: block; object-fit: contain; }
+@media (min-width: 900px) { .hdr-logo-img { height: 52px; max-width: 240px; } }
+
+/* Footer logo: transparent, no tile. */
+.ft-logo-chip { display: inline-block; background: transparent; border-radius: 0; padding: 0; }
+.ft-logo-chip img { height: 44px; width: auto; display: block; }

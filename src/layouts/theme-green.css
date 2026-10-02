@@ -1,0 +1,23 @@
+/* OPTIONAL Perfect Touch green theme. Does nothing until BRAND.theme = "green" in config/brand.js.
+   Overrides only colour variables, so you can switch back any time by setting theme: "". */
+.storefront.theme-green {
+  --gold: #5fb41f;          /* light leaf green (replaces gold accents) */
+  --gold-dark: #1f7a2e;     /* deep leaf green */
+  --gold-grad: linear-gradient(180deg, #74c42f, #2f8f2a);
+  --soft: #eef7e6;
+  --accent: #1f7a2e;
+  --accent-dark: #145a21;
+  --dark: #0f2a17;          /* footer and dark areas */
+  --ink: #12261a;
+  --bg: #f5f8f2;
+  --line: #e1eadb;
+}
+
+/* Same optional theme for the sign-in screens (applies when BRAND.theme = "green"). */
+.auth-page.theme-green {
+  --ah-bg: #f5f8f2; --ah-ink: #12261a; --ah-line: #e1eadb;
+  --ah-dark: #0f2a17; --ah-dark-hover: #081a0e;
+  --ah-gold: #5fb41f; --ah-gold-dark: #1f7a2e;
+}
+.auth-page.theme-green .auth-field input:focus { box-shadow: 0 0 0 3px rgba(95, 180, 31, .35); }
+.auth-page.theme-green .auth-notice { background: #eef7e6; }

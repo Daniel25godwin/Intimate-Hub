@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Truck, ShieldCheck, Lock } from "lucide-react";
 import { BRAND } from "../../config/brand";
 import "../../styles/auth.css";
+import "../../styles/auth-logo.css";
 
 const POINTS = [
   { icon: Truck, title: BRAND.freeDelivery, text: "Straight to your door." },
@@ -15,12 +16,18 @@ const initials = BRAND.name.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).t
 // Register, Verify email and Forgot Password so they all feel like one product.
 export default function AuthShell({ children }) {
   return (
-    <div className="auth-page">
+    <div className={`auth-page${BRAND.theme ? ` theme-${BRAND.theme}` : ""}`}>
       <aside className="auth-brand">
-        <Link to="/" className="auth-wordmark">
-          <span className="auth-mark">{initials}</span>
-          <span>{BRAND.name}</span>
-        </Link>
+        {BRAND.logo ? (
+          <Link to="/" className="auth-logo-tile" aria-label={`${BRAND.name} home`}>
+            <img src={BRAND.logo} alt={BRAND.name} />
+          </Link>
+        ) : (
+          <Link to="/" className="auth-wordmark">
+            <span className="auth-mark">{initials}</span>
+            <span>{BRAND.name}</span>
+          </Link>
+        )}
         <div className="auth-brand-copy">
           <h2>Welcome to {BRAND.name}.</h2>
           <p>Quality products for every need, delivered to your door.</p>

@@ -1,0 +1,29 @@
+/* Perfect Touch auth screens: original dark brand panel, transparent logo, orange primary button.
+   Loaded after auth.css, so these rules override it. */
+
+.auth-page .auth-logo-tile {
+  display: inline-block;
+  align-self: flex-start;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  line-height: 0;
+  text-decoration: none;
+}
+.auth-page .auth-logo-tile img { height: 56px; width: auto; display: block; }
+
+/* Phone / tablet: slim dark bar with the logo (stops the grid stretching it into a tall block). */
+@media (max-width: 899px) {
+  .auth-page { grid-template-rows: auto 1fr; }
+  .auth-page .auth-brand { padding: 16px 20px; }
+  .auth-page .auth-logo-tile img { height: 48px; }
+}
+
+@media (min-width: 900px) {
+  .auth-page .auth-logo-tile img { height: 72px; }
+}
+
+/* Orange primary button: Sign in, Create account, Send link, etc. */
+.auth-page .auth-primary { background: var(--ah-gold); color: #1a1203; }
+.auth-page .auth-primary:hover:not(:disabled) { background: var(--ah-gold-dark); }
+.auth-page .auth-check input { accent-color: var(--ah-gold-dark); }
