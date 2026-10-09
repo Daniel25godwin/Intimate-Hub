@@ -1,34 +1,16 @@
 import { auth } from "../firebase/config";
+import { uploadImage } from "./imageService";
 
-async function authHeader() {
-  const token = await auth.currentUser?.getIdToken?.();
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
-async function parse(res) {
+// Customer uploaded a receipt and tapped "I have paid": tells us (and, by email, the admins).
+export async function submitPaymentProof(orderId, file) {
+  const proofUrl = await uploadImage(file, "payment-proofs");
+  const token = await auth.currentUser.getIdToken();
+  const res = await fetch("/api/payments/submit-proof", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ orderId, proofUrl }),
+  });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.message || "Something went wrong");
   return data;
-}
-
-// Returns { url } — send the customer there to pay.
-export async function initializePayment(orderId) {
-  const res = await fetch("/api/payments/initialize", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...(await authHeader()) },
-    body: JSON.stringify({ orderId }),
-  });
-  return parse(res);
-}
-
-// Returns { paid, orderId, orderNumber, total, status }.
-export async function verifyPayment(reference) {
-  const res = await fetch(`/api/payments/verify?reference=${encodeURIComponent(reference)}`);
-  return parse(res);
-}
-
-// Start a payment and go to Paystack.
-export async function payNow(orderId) {
-  const { url } = await initializePayment(orderId);
-  window.location.href = url;
 }

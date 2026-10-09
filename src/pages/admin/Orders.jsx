@@ -49,7 +49,7 @@ export default function Orders() {
                 <td>{o.deliveryAddress?.recipientName || "Guest"}</td>
                 <td>{o.items?.length || 0}</td>
                 <td>{formatCurrency(o.total)}</td>
-                <td><span className={`pill ${o.paymentStatus === "paid" ? "pill-green" : "pill-amber"}`}>{o.paymentStatus}</span></td>
+                <td><span className={`pill ${o.paymentStatus === "paid" ? "pill-green" : "pill-amber"}`}>{o.paymentStatus === "awaiting_confirmation" ? "check payment" : o.paymentStatus}</span></td>
                 <td><span className={`pill pill-${o.status}`}>{o.status}</span></td>
               </tr>
             ))}

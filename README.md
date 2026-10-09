@@ -68,3 +68,17 @@ npm run dev
 - `api/` — Vercel serverless functions (Admin SDK, never imported by `/src`)
 - `firestore.rules` — the real security boundary
 - `scripts/bootstrap-admin.js` — one-off local script, never deploy it
+
+## Payments (bank transfer)
+
+Customers pay by bank transfer. Flow: place order → order page shows the bank details → customer uploads a receipt and taps **I have paid** → every admin gets an email to check their bank → an admin opens the order and clicks **Confirm payment & order** (or sets status to confirmed) → the customer is emailed "order confirmed".
+
+Set these in Vercel → Environment Variables (server-side, no `VITE_` prefix):
+
+- `BANK_NAME`, `BANK_ACCOUNT_NUMBER`, `BANK_ACCOUNT_NAME` — shown to customers
+- `RESEND_API_KEY`, `MAIL_FROM`, `APP_URL` — used to send the emails
+- `CLOUDINARY_*` — receipts are uploaded to Cloudinary (`payment-proofs` folder)
+
+Delivery fees and the processing fee live in `api/_lib/delivery.js` (server, authoritative) and `src/config/delivery.js` (display) — keep them in sync. `PROCESSING_FEE` can be overridden by env var.
+
+Paystack has been removed; `PAYSTACK_SECRET_KEY` and the Paystack webhook are no longer needed.

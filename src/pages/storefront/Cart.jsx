@@ -7,7 +7,6 @@ import { previewCoupon } from "../../services/couponService";
 import { formatCurrency } from "../../utils/format";
 import CheckoutSteps from "../../components/storefront/CheckoutSteps";
 
-const DELIVERY_FEE = 0; // free delivery — must match the fee set in /api/orders/create
 
 export default function Cart() {
   const { items, setQty, removeItem, subtotal } = useCart();
@@ -41,7 +40,7 @@ export default function Cart() {
   }
 
   const discount = coupon?.discount || 0;
-  const total = subtotal - discount + (items.length ? DELIVERY_FEE : 0);
+  const total = subtotal - discount;
 
   if (items.length === 0) {
     return (
@@ -101,7 +100,7 @@ export default function Cart() {
 
           <div className="summary-row"><span>Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
           {discount > 0 && <div className="summary-row"><span>Discount</span><span>−{formatCurrency(discount)}</span></div>}
-          <div className="summary-row"><span>Delivery</span><span>{DELIVERY_FEE === 0 ? "Free" : formatCurrency(DELIVERY_FEE)}</span></div>
+          <div className="summary-row"><span>Delivery &amp; processing fee</span><span>Added at checkout</span></div>
           <div className="summary-row summary-total"><span>Total</span><span>{formatCurrency(total)}</span></div>
 
           <button className="btn btn-gold" style={{ width: "100%" }} onClick={goCheckout}>

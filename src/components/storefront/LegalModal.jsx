@@ -13,8 +13,8 @@ const DOCS = {
     title: "Terms of Service",
     body: [
       ["Eligibility", "You must be at least 18 years old to create an account or place an order. By registering you confirm that you are."],
-      ["Orders & payment", "Prices are shown in Nigerian Naira. Payment is made securely online through our payment provider. An order is confirmed once payment is received. We may cancel an order if an item is unavailable, and will refund any payment made."],
-      ["Delivery", `${BRAND.freeDelivery}. Delivery times are estimates and depend on your location.`],
+      ["Orders & payment", "Prices are shown in Nigerian Naira. Payment is by bank transfer to the account shown after you place your order. A small processing fee applies. An order is confirmed only once we see your transfer. We may cancel an order if an item is unavailable, and will refund any payment made."],
+      ["Delivery", "Choose Waybill Delivery (carrier fee applies, paid before delivery), Give to Rider (Lagos, rider fare paid on delivery), Stock Piling (we hold paid items for up to 7 days, then ship together) or Store Pickup (Ikorodu garage, Lagos). Delivery times are estimates and depend on your location."],
       ["Returns & refunds", "If an item arrives faulty, damaged or different from what you ordered, tell us promptly after delivery and we will arrange a replacement or refund. Any other returns follow the policy shown on the product page or at checkout."],
       ["Your account", "Keep your login details private. You are responsible for activity on your account."],
       ["Acceptable use", "Do not misuse the site, attempt to access other people's accounts, or post unlawful or abusive reviews."],
@@ -26,7 +26,7 @@ const DOCS = {
     body: [
       ["What we collect", "Your email, name, phone number, delivery address and order history, so we can process and deliver your orders."],
       ["How we use it", "To fulfil orders, provide support, prevent fraud and, only if you opt in, send offers. We never sell your data."],
-      ["Who processes it", "We use trusted providers to run the store — for example Google Firebase (accounts and database), Cloudinary (product images) and Paystack (payments). Card and bank details are handled by Paystack and never stored by us."],
+      ["Who processes it", "We use trusted providers to run the store — for example Google Firebase (accounts and database), Cloudinary (product images and payment receipts) and Resend (emails). Payment is by bank transfer — we only keep the receipt you upload so we can confirm your payment."],
       ["Your rights", "You can view or correct your details in your account, and ask us to delete your account and data, in line with applicable data protection law including the Nigeria Data Protection Act."],
       ["Contact", contact],
     ],

@@ -13,7 +13,6 @@ import ProductDetail from "../pages/storefront/ProductDetail";
 import Cart from "../pages/storefront/Cart";
 import Checkout from "../pages/storefront/Checkout";
 import OrderConfirmation from "../pages/storefront/OrderConfirmation";
-import PaymentCallback from "../pages/storefront/PaymentCallback";
 import Login from "../pages/storefront/Login";
 import Register from "../pages/storefront/Register";
 import ForgotPassword from "../pages/storefront/ForgotPassword";
@@ -62,7 +61,6 @@ export default function App() {
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
-            <Route path="/payment/callback" element={<PaymentCallback />} />
 
             <Route path="/account" element={<AccountLayout />}>
               <Route index element={<AccountOverview />} />

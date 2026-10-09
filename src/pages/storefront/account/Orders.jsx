@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { Package } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
 import { getMyOrders } from "../../../services/customerOrderService";
-import { payNow } from "../../../services/paymentService";
 import { formatCurrency } from "../../../utils/format";
 
 const STATUS_LABEL = {
@@ -14,8 +13,6 @@ const STATUS_LABEL = {
 export default function Orders() {
   const { user, loading: authLoading } = useAuth();
   const [orders, setOrders] = useState(null);
-  const [payingId, setPayingId] = useState(null);
-  const [error, setError] = useState("");
   const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
@@ -25,11 +22,6 @@ export default function Orders() {
       .then(setOrders)
       .catch((err) => { console.error("Could not load orders:", err); setLoadError(err.message || "Unknown error"); setOrders([]); });
   }, [user]);
-
-  async function pay(id) {
-    setPayingId(id); setError("");
-    try { await payNow(id); } catch (err) { setError(err.message); setPayingId(null); }
-  }
 
   if (authLoading || orders === null) return <div className="section"><div className="skeleton" style={{ minHeight: 200 }} /></div>;
 
@@ -58,13 +50,12 @@ export default function Orders() {
   return (
     <div className="section">
       <h2>My orders</h2>
-      {error && <p className="error" role="alert">{error}</p>}
       <div className="table-wrap">
         <table className="table">
           <thead><tr><th>Order</th><th>Date</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th></tr></thead>
           <tbody>
             {orders.map((o) => {
-              const needsPayment = o.paymentMethod === "online" && o.paymentStatus !== "paid" && o.status !== "cancelled";
+              const needsPayment = o.paymentStatus === "unpaid" && o.status !== "cancelled";
               return (
                 <tr key={o.id}>
                   <td><strong>{o.orderNumber}</strong></td>
@@ -73,8 +64,9 @@ export default function Orders() {
                   <td>{formatCurrency(o.total)}</td>
                   <td>
                     {o.paymentStatus === "paid" ? <span className="pill pill-delivered">Paid</span>
-                      : needsPayment ? <button className="btn" style={{ padding: "5px 14px" }} onClick={() => pay(o.id)} disabled={payingId === o.id}>{payingId === o.id ? "…" : "Pay now"}</button>
-                      : <span className="pill pill-pending">Awaiting payment</span>}
+                      : o.paymentStatus === "awaiting_confirmation" ? <Link to={`/order-confirmation/${o.id}`}><span className="pill pill-pending">Checking payment</span></Link>
+                      : needsPayment ? <Link className="btn" style={{ padding: "5px 14px" }} to={`/order-confirmation/${o.id}`}>Pay now</Link>
+                      : <span className="pill pill-pending">—</span>}
                   </td>
                   <td><span className={`pill pill-${o.status}`}>{STATUS_LABEL[o.status] || o.status}</span></td>
                 </tr>

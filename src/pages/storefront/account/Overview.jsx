@@ -61,7 +61,7 @@ export default function Overview() {
           </div>
           <div>
             <span className={`pill pill-${latest.status}`} style={{ textTransform: "capitalize" }}>{latest.status}</span>{" "}
-            <span className={`pill ${latest.paymentStatus === "paid" ? "pill-delivered" : "pill-pending"}`}>{latest.paymentStatus === "paid" ? "Paid" : "Awaiting payment"}</span>
+            <span className={`pill ${latest.paymentStatus === "paid" ? "pill-delivered" : "pill-pending"}`}>{latest.paymentStatus === "paid" ? "Paid" : latest.paymentStatus === "awaiting_confirmation" ? "Checking payment" : "Awaiting payment"}</span>
           </div>
         </div>
       )}

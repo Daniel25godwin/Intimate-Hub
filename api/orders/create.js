@@ -1,5 +1,8 @@
 import { adminDb, verifyRequestUser } from "../_lib/firebaseAdmin.js";
 import { computeDiscount } from "../_lib/couponLogic.js";
+import { bankDetails } from "../_lib/bank.js";
+import { PROCESSING_FEE, DELIVERY_METHODS } from "../_lib/delivery.js";
+import { sendMail, orderReceivedEmail } from "../_lib/mailer.js";
 
 // POST /api/orders/create
 // Body: { items: [{ productId, qty, variant }], deliveryAddress, couponCode }
@@ -20,10 +23,17 @@ export default async function handler(req, res) {
   if (decodedUser.email_verified === false) {
     return res.status(403).json({ message: "Please verify your email before placing an order" });
   }
-  const { items, deliveryAddress, couponCode, paymentMethod, contactEmail } = req.body || {};
-  const METHODS = ["online"];
+  const { items, deliveryAddress, couponCode, paymentMethod, contactEmail, deliveryMethod, acceptedTerms } = req.body || {};
+  const METHODS = ["transfer"];
   if (!METHODS.includes(paymentMethod)) {
     return res.status(400).json({ message: "Please choose a payment method" });
+  }
+
+  if (!DELIVERY_METHODS[deliveryMethod]) {
+    return res.status(400).json({ message: "Please choose a delivery method" });
+  }
+  if (acceptedTerms !== true) {
+    return res.status(400).json({ message: "Please accept the terms & delivery policy" });
   }
 
   if (!Array.isArray(items) || items.length === 0) {
@@ -83,8 +93,9 @@ export default async function handler(req, res) {
         discount = computeDiscount(couponDoc.data(), subtotal);
       }
 
-      const deliveryFee = 0; // free delivery
-      const total = subtotal - discount + deliveryFee;
+      const deliveryFee = DELIVERY_METHODS[deliveryMethod].fee;
+      const processingFee = PROCESSING_FEE;
+      const total = subtotal - discount + processingFee + deliveryFee;
       const orderNumber = `IH-${Date.now().toString().slice(-8)}`;
 
       // ---- 3. WRITES ----
@@ -102,22 +113,44 @@ export default async function handler(req, res) {
         items: resolvedItems,
         subtotal,
         discount,
+        processingFee,
         deliveryFee,
+        deliveryMethod,
+        deliveryMethodLabel: DELIVERY_METHODS[deliveryMethod].label,
+        acceptedTermsAt: new Date(),
         total,
         couponCode: couponCode || null,
         status: "pending",
         paymentStatus: "unpaid",
         paymentRef: null,
         paymentMethod,
+        paymentProofUrl: null,
+        bank: bankDetails(), // snapshot, so the order page keeps showing the account the customer was given
         contactEmail: contactEmail || decodedUser?.email || null,
         deliveryAddress,
         packaging: "discreet",
         createdAt: new Date(),
-        statusHistory: [{ status: "pending", at: new Date() }],
+        statusHistory: [{ status: "pending", at: new Date(), note: "Order received. Transfer the total to the bank account shown on the order page, then send us the receipt so we can confirm your payment." }],
       });
 
-      return { orderId: orderRef.id, orderNumber, subtotal, discount, deliveryFee, total, paymentMethod, paymentStatus: "unpaid" };
+      return { orderId: orderRef.id, orderNumber, subtotal, discount, processingFee, deliveryFee, total, paymentMethod, paymentStatus: "unpaid" };
     });
+
+    // Tell the customer how to pay. A mail failure must not lose the order.
+    try {
+      const to = contactEmail || decodedUser.email;
+      if (to) {
+        const mail = orderReceivedEmail({
+          name: deliveryAddress.recipientName,
+          order: result,
+          bank: bankDetails(),
+          link: `${process.env.APP_URL}/order-confirmation/${result.orderId}`,
+        });
+        await sendMail({ to, ...mail });
+      }
+    } catch (mailErr) {
+      console.error("Order-received email failed", mailErr);
+    }
 
     return res.status(200).json(result);
   } catch (err) {
