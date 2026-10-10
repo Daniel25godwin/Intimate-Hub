@@ -1,5 +1,6 @@
 import { adminDb, verifyRequestUser } from "../_lib/firebaseAdmin.js";
 import { sendMail, orderConfirmedEmail, paymentNotFoundEmail } from "../_lib/mailer.js";
+import { orderLink } from "../_lib/orderAccess.js";
 
 const STATUSES = ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"];
 
@@ -61,7 +62,7 @@ export default async function handler(req, res) {
       const mail = orderConfirmedEmail({
         name: order.deliveryAddress?.recipientName,
         order,
-        link: `${process.env.APP_URL}/order-confirmation/${orderId}`,
+        link: orderLink(orderId, order),
       });
       await sendMail({ to: order.contactEmail, ...mail });
       await ref.update({ confirmationEmailSentAt: new Date() });
@@ -102,7 +103,7 @@ async function rejectProof(ref, orderId, reason, res) {
     try {
       await sendMail({
         to: order.contactEmail,
-        ...paymentNotFoundEmail({ name: order.deliveryAddress?.recipientName, order, reason: note, link: `${process.env.APP_URL}/order-confirmation/${orderId}` }),
+        ...paymentNotFoundEmail({ name: order.deliveryAddress?.recipientName, order, reason: note, link: orderLink(orderId, order) }),
       });
       emailed = true;
     } catch (err) { console.error("Payment-not-found email failed", err); }

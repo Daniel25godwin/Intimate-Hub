@@ -1,6 +1,9 @@
 import { adminDb, verifyRequestUser } from "../_lib/firebaseAdmin.js";
 import { computeDiscount } from "../_lib/couponLogic.js";
 import { bankDetails } from "../_lib/bank.js";
+import { allowSend } from "../_lib/throttle.js";
+import { runInBackground } from "../_lib/background.js";
+import { newAccessToken, orderLink } from "../_lib/orderAccess.js";
 import { PROCESSING_FEE, DELIVERY_METHODS } from "../_lib/delivery.js";
 import { sendMail, orderReceivedEmail } from "../_lib/mailer.js";
 
@@ -16,17 +19,24 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: "Method not allowed" });
   }
 
-  const decodedUser = await verifyRequestUser(req);
-  if (!decodedUser) {
-    return res.status(401).json({ message: "Please sign in to place an order" });
-  }
-  if (decodedUser.email_verified === false) {
-    return res.status(403).json({ message: "Please verify your email before placing an order" });
-  }
+  // Signed-in, verified customers get the order on their account. Everyone else checks out as a guest.
+  let decodedUser = await verifyRequestUser(req);
+  if (decodedUser && decodedUser.email_verified === false) decodedUser = null;
   const { items, deliveryAddress, couponCode, paymentMethod, contactEmail, deliveryMethod, acceptedTerms } = req.body || {};
   const METHODS = ["transfer"];
   if (!METHODS.includes(paymentMethod)) {
     return res.status(400).json({ message: "Please choose a payment method" });
+  }
+
+  if (!decodedUser) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail || "")) {
+      return res.status(400).json({ message: "Please enter a valid email so we can send your order details" });
+    }
+    // No account to tie abuse to, so slow down repeat guest orders from one address.
+    const ip = (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "unknown";
+    if (!(await allowSend(`guest-order:${ip}`, 10_000))) {
+      return res.status(429).json({ message: "Please wait a few seconds and try again" });
+    }
   }
 
   if (!DELIVERY_METHODS[deliveryMethod]) {
@@ -44,7 +54,9 @@ export default async function handler(req, res) {
   }
 
   try {
+    const bank = await bankDetails();
     const orderRef = adminDb.collection("orders").doc();
+    const accessToken = newAccessToken();
 
     const result = await adminDb.runTransaction(async (tx) => {
       // ---- 1. READS — every tx.get must happen before any tx.set/update ----
@@ -109,6 +121,7 @@ export default async function handler(req, res) {
 
       tx.set(orderRef, {
         userId: decodedUser?.uid || null,
+        accessToken,
         orderNumber,
         items: resolvedItems,
         subtotal,
@@ -125,7 +138,7 @@ export default async function handler(req, res) {
         paymentRef: null,
         paymentMethod,
         paymentProofUrl: null,
-        bank: bankDetails(), // snapshot, so the order page keeps showing the account the customer was given
+        bank, // snapshot, so the order page keeps showing the account the customer was given
         contactEmail: contactEmail || decodedUser?.email || null,
         deliveryAddress,
         packaging: "discreet",
@@ -133,23 +146,23 @@ export default async function handler(req, res) {
         statusHistory: [{ status: "pending", at: new Date(), note: "Order received. Transfer the total to the bank account shown on the order page, then send us the receipt so we can confirm your payment." }],
       });
 
-      return { orderId: orderRef.id, orderNumber, subtotal, discount, processingFee, deliveryFee, total, paymentMethod, paymentStatus: "unpaid" };
+      return { orderId: orderRef.id, orderNumber, subtotal, discount, processingFee, deliveryFee, total, paymentMethod, paymentStatus: "unpaid", accessToken };
     });
 
-    // Tell the customer how to pay. A mail failure must not lose the order.
-    try {
-      const to = contactEmail || decodedUser.email;
-      if (to) {
-        const mail = orderReceivedEmail({
-          name: deliveryAddress.recipientName,
-          order: result,
-          bank: bankDetails(),
-          link: `${process.env.APP_URL}/order-confirmation/${result.orderId}`,
-        });
-        await sendMail({ to, ...mail });
-      }
-    } catch (mailErr) {
-      console.error("Order-received email failed", mailErr);
+    // Tell the customer how to pay, after we've answered — a slow or failed email must not hold up or lose the order.
+    const to = contactEmail || decodedUser?.email;
+    if (to) {
+      runInBackground("Order-received email", () =>
+        sendMail({
+          to,
+          ...orderReceivedEmail({
+            name: deliveryAddress.recipientName,
+            order: result,
+            bank,
+            link: orderLink(result.orderId, result),
+          }),
+        })
+      );
     }
 
     return res.status(200).json(result);

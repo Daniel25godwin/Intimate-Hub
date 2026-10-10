@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Landmark, Check } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
@@ -7,7 +7,6 @@ import { createOrder } from "../../services/orderService";
 import { formatCurrency } from "../../utils/format";
 import CheckoutSteps from "../../components/storefront/CheckoutSteps";
 import { getCheckoutDefaults } from "../../services/accountService";
-import { needsVerification } from "../../services/authService";
 import { DELIVERY_METHODS, PROCESSING_FEE } from "../../config/delivery";
 import LegalModal from "../../components/storefront/LegalModal";
 
@@ -87,17 +86,15 @@ export default function Checkout() {
       });
       clearCart();
       try { sessionStorage.removeItem("ih_coupon"); } catch { /* ignore */ }
-      navigate(`/order-confirmation/${result.orderId}`, { replace: true });
+      navigate(`/order-confirmation/${result.orderId}?k=${result.accessToken}`, { replace: true });
     } catch (err) {
       setError(err.message);
       setPlacing(false);
     }
   }
 
-  // Checkout is for signed-in, verified customers only.
+  // Guests can check out too — no account needed.
   if (authLoading) return <div className="section"><div className="skeleton" style={{ minHeight: 300 }} /></div>;
-  if (!user) return <Navigate to="/register" replace state={{ from: location }} />;
-  if (needsVerification(user)) return <Navigate to="/verify-email" replace state={{ email: user.email, from: location }} />;
 
   if (placing) return <PlacingScreen />;
 
@@ -116,6 +113,11 @@ export default function Checkout() {
       <div className="cart-layout">
         <form onSubmit={placeOrder} className="form">
           <h1>Checkout</h1>
+          {!user && (
+            <p className="muted" style={{ marginTop: -8 }}>
+              Checking out as a guest. <Link to="/login" state={{ from: location }}>Sign in</Link> to save your details and track orders in your account.
+            </p>
+          )}
 
           <div className="panel">
             <h3>Contact</h3>

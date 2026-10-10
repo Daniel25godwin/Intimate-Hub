@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { Check, Copy, Upload, History } from "lucide-react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Check, Copy, Upload, History, Clock, Mail, PackageCheck, ShoppingBag, ArrowRight } from "lucide-react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../firebase/config";
 import { useAuth } from "../../context/AuthContext";
 import { formatCurrency } from "../../utils/format";
-import { submitPaymentProof } from "../../services/paymentService";
+import { submitPaymentProof, getOrderByKey } from "../../services/paymentService";
 import CheckoutSteps from "../../components/storefront/CheckoutSteps";
 
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -22,17 +22,27 @@ function CopyButton({ value }) {
 export default function OrderConfirmation() {
   const { orderId } = useParams();
   const { user, loading: authLoading } = useAuth();
+  const [params] = useSearchParams();
+  const k = params.get("k"); // guest access key from the order link
   const [order, setOrder] = useState(undefined); // undefined = loading, null = not found
   const [file, setFile] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [justSent, setJustSent] = useState(false);
+  const [resend, setResend] = useState(false);
 
+  // With a key (guests, email link) read through the API; otherwise the signed-in owner reads Firestore.
   const load = () =>
-    getDoc(doc(db, "orders", orderId))
-      .then((s) => setOrder(s.exists() ? { id: s.id, ...s.data() } : null))
+    (k
+      ? getOrderByKey(orderId, k)
+      : getDoc(doc(db, "orders", orderId)).then((s) => (s.exists() ? { id: s.id, ...s.data() } : null)))
+      .then(setOrder)
       .catch(() => setOrder(null));
 
-  useEffect(() => { if (!authLoading && user) load(); else if (!authLoading) setOrder(null); }, [orderId, user, authLoading]);
+  useEffect(() => {
+    if (authLoading) return;
+    if (k || user) load(); else setOrder(null);
+  }, [orderId, k, user, authLoading]);
 
   function pick(e) {
     const f = e.target.files?.[0];
@@ -47,9 +57,12 @@ export default function OrderConfirmation() {
     if (!file) return;
     setBusy(true); setError("");
     try {
-      await submitPaymentProof(orderId, file);
+      await submitPaymentProof(orderId, file, k);
       setFile(null);
+      setResend(false);
+      setJustSent(true);
       await load();
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) { setError(err.message); }
     setBusy(false);
   }
@@ -59,8 +72,8 @@ export default function OrderConfirmation() {
     return (
       <div className="section empty">
         <h2>We couldn't find that order</h2>
-        <p className="muted">Sign in with the account you ordered with.</p>
-        <Link to="/account/orders" className="btn">My orders</Link>
+        <p className="muted">Open the link from your order email, or sign in with the account you ordered with.</p>
+        <div className="confirm-actions"><Link to="/login" className="btn">Sign in</Link><Link to="/shop" className="btn btn-outline">Continue shopping</Link></div>
       </div>
     );
   }
@@ -73,19 +86,36 @@ export default function OrderConfirmation() {
   let heading = "We have your order";
   let lead = "Your order is not confirmed until we see your transfer. Send the exact amount below and use the order number as the narration.";
   if (paid) { heading = "Order confirmed"; lead = "We've received your payment and your order is confirmed. We'll be in touch about delivery."; }
-  else if (checking) { heading = "Thanks — we're checking your payment"; lead = "We've been told you've paid. We'll confirm your order as soon as we see the transfer, and email you when it's done."; }
+  else if (checking) { heading = "Order received"; lead = ""; }
   else if (cancelled) { heading = "Order cancelled"; lead = "This order was cancelled."; }
 
   const history = [...(order.statusHistory || [])].filter((h) => h.note).reverse();
 
   return (
     <div className="confirm" style={{ maxWidth: 640, margin: "0 auto", textAlign: "left" }}>
-      <div style={{ display: "flex", justifyContent: "center" }}><CheckoutSteps current={paid ? 4 : 3} /></div>
-      <h1>{heading}</h1>
-      <p className="muted">Order <strong>{order.orderNumber}</strong></p>
-      <p>{lead}</p>
+      <div style={{ display: "flex", justifyContent: "center" }}><CheckoutSteps current={paid || checking ? 4 : 3} /></div>
+      {checking && (
+        <div className="panel" role="status" style={{ textAlign: "center", borderColor: "var(--accent)", background: "var(--soft)" }}>
+          <div className="auth-success" style={{ margin: "0 auto 12px" }}><Check size={26} strokeWidth={2.5} /></div>
+          <h1 style={{ margin: "0 0 4px" }}>{justSent ? "Payment proof sent — order received!" : "Order received"}</h1>
+          <p className="muted" style={{ margin: "0 0 12px" }}>Order <strong>{order.orderNumber}</strong> · {formatCurrency(order.total)}</p>
+          <p style={{ margin: "0 0 16px" }}>Thank you! We've got your receipt and we're now checking our account for your transfer.</p>
+          <ul style={{ listStyle: "none", padding: 0, margin: "0 auto 16px", maxWidth: 380, textAlign: "left" }}>
+            <li style={{ display: "flex", gap: 8, marginBottom: 8 }}><Check size={18} /> Order placed</li>
+            <li style={{ display: "flex", gap: 8, marginBottom: 8 }}><Check size={18} /> Payment proof received</li>
+            <li style={{ display: "flex", gap: 8, marginBottom: 8 }}><Clock size={18} /> We confirm your transfer</li>
+            <li style={{ display: "flex", gap: 8 }}><PackageCheck size={18} /> We prepare your delivery</li>
+          </ul>
+          <p className="muted" style={{ fontSize: 14 }}><Mail size={14} style={{ verticalAlign: "-2px" }} /> We'll email you at <strong>{order.contactEmail}</strong> as soon as your order is confirmed. You can also check this page {user ? <>or <Link to="/account/orders">My orders</Link>.</> : "or use the link in your email."}</p>
+          <p style={{ marginBottom: 0 }}><button type="button" className="btn-link" onClick={() => setResend((v) => !v)}>{resend ? "Cancel" : "Sent the wrong receipt? Upload a different one"}</button></p>
+        </div>
+      )}
 
-      {!paid && !cancelled && (
+      {!checking && (<><h1>{heading}</h1>
+      <p className="muted">Order <strong>{order.orderNumber}</strong></p>
+      <p>{lead}</p></>)}
+
+      {!paid && !cancelled && (!checking || resend) && (
         <>
           <div className="panel">
             <div className="summary-row"><span>Subtotal</span><span>{formatCurrency(order.subtotal)}</span></div>
@@ -107,8 +137,7 @@ export default function OrderConfirmation() {
           </div>
 
           <div className="panel">
-            <h3>{checking ? "Payment proof sent" : "Confirm your payment"}</h3>
-            {checking && order.paymentProofUrl && <p><a href={order.paymentProofUrl} target="_blank" rel="noreferrer">View the receipt you sent</a></p>}
+            <h3>{checking ? "Send a different receipt" : "Confirm your payment"}</h3>
             <label className="field">
               <span><Upload size={16} style={{ verticalAlign: "-3px" }} /> {checking ? "Upload a different receipt" : "Upload proof of payment"}</span>
               <input type="file" accept="image/*,application/pdf" onChange={pick} />
@@ -137,7 +166,11 @@ export default function OrderConfirmation() {
         )}
       </div>
 
-      <p><Link to="/account/orders">View my orders</Link> · <Link to="/shop">Continue shopping</Link></p>
+      <div className="confirm-actions">
+        {user && <Link to="/account/orders" className="btn btn-gold"><ShoppingBag size={18} /> View my orders</Link>}
+        <Link to="/shop" className={user ? "btn btn-outline" : "btn btn-gold"}>Continue shopping <ArrowRight size={18} /></Link>
+      </div>
+      {!user && <p className="muted" style={{ fontSize: 13, textAlign: "center" }}>Bookmark this page or use the link in your email to come back to this order any time.</p>}
     </div>
   );
 }

@@ -32,11 +32,10 @@ export default function Cart() {
     }
   }
 
-  // Guests create an account first; the cart is kept, and they return to checkout afterwards.
+  // Anyone can check out — an account is optional.
   function goCheckout() {
     try { coupon ? sessionStorage.setItem("ih_coupon", coupon.code) : sessionStorage.removeItem("ih_coupon"); } catch { /* ignore */ }
-    if (user) navigate("/checkout", { state: { couponCode: coupon?.code || null } });
-    else navigate("/register", { state: { from: { pathname: "/checkout" } } });
+    navigate("/checkout", { state: { couponCode: coupon?.code || null } });
   }
 
   const discount = coupon?.discount || 0;
@@ -104,10 +103,9 @@ export default function Cart() {
           <div className="summary-row summary-total"><span>Total</span><span>{formatCurrency(total)}</span></div>
 
           <button className="btn btn-gold" style={{ width: "100%" }} onClick={goCheckout}>
-            {user ? "Proceed to Checkout" : "Sign up to check out"} <ArrowRight size={18} />
+            Proceed to Checkout <ArrowRight size={18} />
           </button>
-          {!user && <p className="muted" style={{ fontSize: 13, marginTop: 10 }}>It's free and quick. Your cart is saved, and you can track your order afterwards.</p>}
-          <p className="muted" style={{ fontSize: 13, marginTop: 12, marginBottom: 0 }}>Free delivery on every order.</p>
+          {!user && <p className="muted" style={{ fontSize: 13, marginTop: 10 }}>No account needed. You can check out as a guest.</p>}
         </aside>
       </div>
     </div>

@@ -647,3 +647,10 @@ html { scroll-behavior: smooth; }
 .storefront .thumbs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding: 3px 2px; }
 .storefront .thumbs::-webkit-scrollbar { display: none; }
 .storefront .thumbs img { flex: 0 0 auto; }
+
+/* small text-style button (copy, terms link, re-upload receipt) */
+.btn-link { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; font: inherit; display: inline-flex; align-items: center; gap: 4px; }
+
+/* order page: full-width, easy-to-tap action buttons */
+.confirm-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 24px 0 12px; }
+.confirm-actions .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 24px; font-weight: 600; border-radius: 10px; text-decoration: none; flex: 1 1 200px; }

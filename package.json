@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@vercel/functions": "^3.9.11",
     "firebase": "^10.13.0",
     "firebase-admin": "^12.7.0",
     "lucide-react": "^0.454.0",
