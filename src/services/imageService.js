@@ -2,14 +2,13 @@ import { auth } from "../firebase/config";
 
 // Images live on Cloudinary (free tier, no card) because Firebase Storage now
 // requires the Blaze plan. Uploads are signed by /api/uploads/sign (admin only).
-// `extra` carries { orderId, k } for customer receipt uploads (guests have no login).
-export async function uploadImage(file, folder = "products", extra = {}) {
-  const idToken = auth.currentUser ? await auth.currentUser.getIdToken() : null;
+export async function uploadImage(file, folder = "products") {
+  const idToken = await auth.currentUser.getIdToken();
 
   const signRes = await fetch("/api/uploads/sign", {
     method: "POST",
-    headers: { "Content-Type": "application/json", ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}) },
-    body: JSON.stringify({ folder, ...extra }),
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+    body: JSON.stringify({ folder }),
   });
   const contentType = signRes.headers.get("content-type") || "";
   if (!contentType.includes("application/json")) {

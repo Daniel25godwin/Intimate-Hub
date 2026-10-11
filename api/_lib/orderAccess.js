@@ -1,7 +1,7 @@
 import { randomBytes, timingSafeEqual } from "node:crypto";
 
 // Guests have no account, so each order gets a long random key. Whoever has the
-// link (…/order-confirmation/<id>?k=<key>) can view the order and send a receipt.
+// link (…/order-confirmation/<id>?k=<key>) can view the order and tell us they've paid.
 export const newAccessToken = () => randomBytes(16).toString("hex");
 
 export function tokenMatches(order, k) {

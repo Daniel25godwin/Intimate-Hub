@@ -26,7 +26,7 @@ const DOCS = {
     body: [
       ["What we collect", "Your email, name, phone number, delivery address and order history, so we can process and deliver your orders."],
       ["How we use it", "To fulfil orders, provide support, prevent fraud and, only if you opt in, send offers. We never sell your data."],
-      ["Who processes it", "We use trusted providers to run the store — for example Google Firebase (accounts and database), Cloudinary (product images and payment receipts) and Resend (emails). Payment is by bank transfer — we only keep the receipt you upload so we can confirm your payment."],
+      ["Who processes it", "We use trusted providers to run the store — for example Google Firebase (accounts and database), Cloudinary (product images) and Resend (emails). Payment is by bank transfer to our account, so we never see or store your card details."],
       ["Your rights", "You can view or correct your details in your account, and ask us to delete your account and data, in line with applicable data protection law including the Nigeria Data Protection Act."],
       ["Contact", contact],
     ],

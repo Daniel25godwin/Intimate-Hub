@@ -1,14 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { Check, Copy, Upload, History, Clock, Mail, PackageCheck, ShoppingBag, ArrowRight } from "lucide-react";
+import { Check, Copy, History, Clock, Mail, PackageCheck, ShoppingBag, ArrowRight } from "lucide-react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../firebase/config";
 import { useAuth } from "../../context/AuthContext";
 import { formatCurrency } from "../../utils/format";
-import { submitPaymentProof, getOrderByKey } from "../../services/paymentService";
+import { markPaid, getOrderByKey } from "../../services/paymentService";
 import CheckoutSteps from "../../components/storefront/CheckoutSteps";
-
-const MAX_BYTES = 10 * 1024 * 1024;
 
 function CopyButton({ value }) {
   const [done, setDone] = useState(false);
@@ -25,11 +23,9 @@ export default function OrderConfirmation() {
   const [params] = useSearchParams();
   const k = params.get("k"); // guest access key from the order link
   const [order, setOrder] = useState(undefined); // undefined = loading, null = not found
-  const [file, setFile] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [justSent, setJustSent] = useState(false);
-  const [resend, setResend] = useState(false);
 
   // With a key (guests, email link) read through the API; otherwise the signed-in owner reads Firestore.
   const load = () =>
@@ -44,22 +40,10 @@ export default function OrderConfirmation() {
     if (k || user) load(); else setOrder(null);
   }, [orderId, k, user, authLoading]);
 
-  function pick(e) {
-    const f = e.target.files?.[0];
-    setError("");
-    if (!f) return setFile(null);
-    if (!/^image\//.test(f.type) && f.type !== "application/pdf") return setError("Please choose a photo, screenshot or PDF.");
-    if (f.size > MAX_BYTES) return setError("That file is over 10MB.");
-    setFile(f);
-  }
-
   async function iHavePaid() {
-    if (!file) return;
     setBusy(true); setError("");
     try {
-      await submitPaymentProof(orderId, file, k);
-      setFile(null);
-      setResend(false);
+      await markPaid(orderId, k);
       setJustSent(true);
       await load();
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -97,17 +81,16 @@ export default function OrderConfirmation() {
       {checking && (
         <div className="panel" role="status" style={{ textAlign: "center", borderColor: "var(--accent)", background: "var(--soft)" }}>
           <div className="auth-success" style={{ margin: "0 auto 12px" }}><Check size={26} strokeWidth={2.5} /></div>
-          <h1 style={{ margin: "0 0 4px" }}>{justSent ? "Payment proof sent — order received!" : "Order received"}</h1>
+          <h1 style={{ margin: "0 0 4px" }}>{justSent ? "Thanks — order received!" : "Order received"}</h1>
           <p className="muted" style={{ margin: "0 0 12px" }}>Order <strong>{order.orderNumber}</strong> · {formatCurrency(order.total)}</p>
-          <p style={{ margin: "0 0 16px" }}>Thank you! We've got your receipt and we're now checking our account for your transfer.</p>
+          <p style={{ margin: "0 0 16px" }}>Thank you! We've been told you've paid, and we're now checking our account for your transfer.</p>
           <ul style={{ listStyle: "none", padding: 0, margin: "0 auto 16px", maxWidth: 380, textAlign: "left" }}>
             <li style={{ display: "flex", gap: 8, marginBottom: 8 }}><Check size={18} /> Order placed</li>
-            <li style={{ display: "flex", gap: 8, marginBottom: 8 }}><Check size={18} /> Payment proof received</li>
+            <li style={{ display: "flex", gap: 8, marginBottom: 8 }}><Check size={18} /> Payment notice received</li>
             <li style={{ display: "flex", gap: 8, marginBottom: 8 }}><Clock size={18} /> We confirm your transfer</li>
             <li style={{ display: "flex", gap: 8 }}><PackageCheck size={18} /> We prepare your delivery</li>
           </ul>
           <p className="muted" style={{ fontSize: 14 }}><Mail size={14} style={{ verticalAlign: "-2px" }} /> We'll email you at <strong>{order.contactEmail}</strong> as soon as your order is confirmed. You can also check this page {user ? <>or <Link to="/account/orders">My orders</Link>.</> : "or use the link in your email."}</p>
-          <p style={{ marginBottom: 0 }}><button type="button" className="btn-link" onClick={() => setResend((v) => !v)}>{resend ? "Cancel" : "Sent the wrong receipt? Upload a different one"}</button></p>
         </div>
       )}
 
@@ -115,7 +98,7 @@ export default function OrderConfirmation() {
       <p className="muted">Order <strong>{order.orderNumber}</strong></p>
       <p>{lead}</p></>)}
 
-      {!paid && !cancelled && (!checking || resend) && (
+      {!paid && !cancelled && !checking && (
         <>
           <div className="panel">
             <div className="summary-row"><span>Subtotal</span><span>{formatCurrency(order.subtotal)}</span></div>
@@ -137,17 +120,12 @@ export default function OrderConfirmation() {
           </div>
 
           <div className="panel">
-            <h3>{checking ? "Send a different receipt" : "Confirm your payment"}</h3>
-            <label className="field">
-              <span><Upload size={16} style={{ verticalAlign: "-3px" }} /> {checking ? "Upload a different receipt" : "Upload proof of payment"}</span>
-              <input type="file" accept="image/*,application/pdf" onChange={pick} />
-              <small className="muted">Photo, screenshot or PDF · max 10MB</small>
-            </label>
+            <h3>Done transferring?</h3>
+            <p className="muted" style={{ fontSize: 14 }}>Once you've sent <strong>{formatCurrency(order.total)}</strong> with <strong>{order.orderNumber}</strong> as the narration, tap the button below so we know to look for it.</p>
             {error && <p className="error" role="alert">{error}</p>}
-            <button className="btn" onClick={iHavePaid} disabled={!file || busy}>
-              <Check size={16} /> {busy ? "Sending…" : checking ? "Send new receipt" : "I have paid"}
+            <button className="btn btn-gold" onClick={iHavePaid} disabled={busy} style={{ width: "100%" }}>
+              <Check size={16} /> {busy ? "Sending…" : "I have paid"}
             </button>
-            {!file && !checking && <p className="muted" style={{ fontSize: 13 }}>Upload your transfer receipt first. Then “I have paid” unlocks.</p>}
           </div>
         </>
       )}

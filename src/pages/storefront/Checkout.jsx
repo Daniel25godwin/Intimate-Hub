@@ -156,7 +156,7 @@ export default function Checkout() {
               <Landmark size={18} style={{ marginTop: 2, color: "var(--accent)", flexShrink: 0 }} />
               <span>
                 <strong>Pay by bank transfer</strong>
-                <small>After you place the order you'll see our bank details. Transfer the exact total, upload your receipt and tap “I have paid”. Your order is confirmed once we see your transfer.</small>
+                <small>After you place the order you'll see our bank details. Transfer the exact total, then tap “I have paid”. Your order is confirmed once we see your transfer.</small>
               </span>
             </div>
           </div>

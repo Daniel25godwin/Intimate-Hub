@@ -74,7 +74,7 @@ export default async function handler(req, res) {
   return res.status(200).json({ ok: true, emailed, emailFailed: shouldEmail && !emailed });
 }
 
-// "We couldn't find this payment": clears the receipt so the customer can pay/upload again.
+// "We couldn't find this payment": sends the order back to "unpaid" so the customer can pay and tap "I have paid" again.
 async function rejectProof(ref, orderId, reason, res) {
   const note = (reason || "").toString().slice(0, 300);
   let order;
@@ -91,7 +91,7 @@ async function rejectProof(ref, orderId, reason, res) {
         paymentRejectedAt: new Date(),
         statusHistory: [
           ...(order.statusHistory || []),
-          { status: order.status, at: new Date(), note: `We couldn't match your payment yet.${note ? ` ${note}` : ""} Please check and upload your receipt again.` },
+          { status: order.status, at: new Date(), note: `We couldn't match your payment yet.${note ? ` ${note}` : ""} Please check and tap “I have paid” again once the transfer is complete.` },
         ],
       });
     });

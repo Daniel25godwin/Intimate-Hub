@@ -83,7 +83,7 @@ export const orderReceivedEmail = ({ name, order, bank, link }) => ({
   subject: `We have your order ${order.orderNumber} — ${APP_NAME}`,
   html: orderLayout({
     heading: `Thanks, ${name || "there"} — we have your order`,
-    intro: `Your order is <strong>not confirmed until we see your transfer</strong>. Send the exact amount below and use the order number as the narration. Then upload your receipt on the order page and tap “I have paid”.`,
+    intro: `Your order is <strong>not confirmed until we see your transfer</strong>. Send the exact amount below and use the order number as the narration. Then open your order and tap “I have paid”.`,
     rows: [
       ["Order", order.orderNumber],
       ["Amount to transfer", naira(order.total)],
@@ -93,11 +93,11 @@ export const orderReceivedEmail = ({ name, order, bank, link }) => ({
       ["Account number", bank.accountNumber],
       ["Account name", bank.accountName],
     ],
-    buttonLabel: "Upload payment proof",
+    buttonLabel: "Open my order",
     link,
     outro: "If you didn't place this order, you can ignore this email.",
   }),
-  text: `We have your order ${order.orderNumber}. It is not confirmed until we see your transfer.\nAmount: ${naira(order.total)}\nNarration: ${order.orderNumber}\n${bank.bankName} ${bank.accountNumber} (${bank.accountName})\nUpload your receipt: ${link}`,
+  text: `We have your order ${order.orderNumber}. It is not confirmed until we see your transfer.\nAmount: ${naira(order.total)}\nNarration: ${order.orderNumber}\n${bank.bankName} ${bank.accountNumber} (${bank.accountName})\nAfter you pay, tap “I have paid” here: ${link}`,
 });
 
 // To every admin when a customer says they've paid.
@@ -115,7 +115,7 @@ export const adminPaymentAlertEmail = ({ order, link }) => ({
     ],
     buttonLabel: "Review order",
     link,
-    outro: "Their payment proof is attached to the order. Once you confirm, the customer is emailed automatically.",
+    outro: "Once you confirm, the customer is emailed automatically.",
   }),
   text: `${order.orderNumber} — ${naira(order.total)}. A customer says they've paid. Check your bank, then update the order: ${link}`,
 });
@@ -142,15 +142,15 @@ export const paymentNotFoundEmail = ({ name, order, reason, link }) => ({
   subject: `We couldn't confirm your payment for ${order.orderNumber} — ${APP_NAME}`,
   html: orderLayout({
     heading: "We couldn't confirm your payment",
-    intro: `Hi ${escapeHtml(name || "there")}, we couldn't match a transfer to your order yet.${reason ? ` <strong>Note from us:</strong> ${escapeHtml(reason)}` : ""} Please check the amount and narration, then upload your receipt again.`,
+    intro: `Hi ${escapeHtml(name || "there")}, we couldn't match a transfer to your order yet.${reason ? ` <strong>Note from us:</strong> ${escapeHtml(reason)}` : ""} Please check the amount and narration, then tap “I have paid” again once the transfer is complete.`,
     rows: [
       ["Order", order.orderNumber],
       ["Amount to transfer", naira(order.total)],
       ["Narration", order.orderNumber],
     ],
-    buttonLabel: "Upload receipt again",
+    buttonLabel: "Open my order",
     link,
-    outro: "If you've already paid, reply with your receipt and we'll sort it out.",
+    outro: "If you've already paid, reply to this email with your transfer details and we'll sort it out.",
   }),
-  text: `We couldn't confirm your payment for ${order.orderNumber}.${reason ? ` Note: ${reason}` : ""} Upload your receipt again: ${link}`,
+  text: `We couldn't confirm your payment for ${order.orderNumber}.${reason ? ` Note: ${reason}` : ""} Tap “I have paid” again after the transfer: ${link}`,
 });

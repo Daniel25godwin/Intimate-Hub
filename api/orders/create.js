@@ -137,13 +137,12 @@ export default async function handler(req, res) {
         paymentStatus: "unpaid",
         paymentRef: null,
         paymentMethod,
-        paymentProofUrl: null,
         bank, // snapshot, so the order page keeps showing the account the customer was given
         contactEmail: contactEmail || decodedUser?.email || null,
         deliveryAddress,
         packaging: "discreet",
         createdAt: new Date(),
-        statusHistory: [{ status: "pending", at: new Date(), note: "Order received. Transfer the total to the bank account shown on the order page, then send us the receipt so we can confirm your payment." }],
+        statusHistory: [{ status: "pending", at: new Date(), note: "Order received. Transfer the total to the bank account shown on the order page, then tap “I have paid” so we can confirm your payment." }],
       });
 
       return { orderId: orderRef.id, orderNumber, subtotal, discount, processingFee, deliveryFee, total, paymentMethod, paymentStatus: "unpaid", accessToken };

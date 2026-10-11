@@ -71,18 +71,18 @@ npm run dev
 
 ## Payments (bank transfer)
 
-Customers pay by bank transfer. Flow: place order → order page shows the bank details → customer uploads a receipt and taps **I have paid** → every admin gets an email to check their bank → an admin opens the order and clicks **Confirm payment & order** (or sets status to confirmed) → the customer is emailed "order confirmed".
+Customers pay by bank transfer. Flow: place order → order page shows the bank details → customer transfers and taps **I have paid** → every admin gets an email to check their bank → an admin opens the order and clicks **Confirm payment & order** (or sets status to confirmed) → the customer is emailed "order confirmed".
 
 Set these in Vercel → Environment Variables (server-side, no `VITE_` prefix):
 
 - Bank details are edited in **Admin → Settings → Bank account** (stored in Firestore). `BANK_NAME`, `BANK_ACCOUNT_NUMBER`, `BANK_ACCOUNT_NAME` env vars are only a fallback if nothing is saved there
 - `RESEND_API_KEY`, `MAIL_FROM`, `APP_URL` — used to send the emails
-- `CLOUDINARY_*` — receipts are uploaded to Cloudinary (`payment-proofs` folder)
+- `CLOUDINARY_*` — product images
 
-Delivery fees and the processing fee live in `api/_lib/delivery.js` (server, authoritative) and `src/config/delivery.js` (display) — keep them in sync. `PROCESSING_FEE` can be overridden by env var.
+Delivery is free (all fees are 0). Delivery fees and the processing fee live in `api/_lib/delivery.js` (server, authoritative) and `src/config/delivery.js` (display) — keep them in sync. `PROCESSING_FEE` can be overridden by env var.
 
 Paystack has been removed; `PAYSTACK_SECRET_KEY` and the Paystack webhook are no longer needed.
 
 ## Guest checkout
 
-No account is needed to buy. Each order gets a random access key; the order page link is `/order-confirmation/<id>?k=<key>` (sent in the emails and used right after checkout). `/api/orders/get` and receipt upload only work with that key (or for the signed-in owner/admin). Guest orders are rate-limited per IP. Signed-in, email-verified customers still get the order on their account.
+No account is needed to buy. Each order gets a random access key; the order page link is `/order-confirmation/<id>?k=<key>` (sent in the emails and used right after checkout). `/api/orders/get` and `/api/payments/mark-paid` only work with that key (or for the signed-in owner/admin). Guest orders are rate-limited per IP. Signed-in, email-verified customers still get the order on their account.

@@ -3,7 +3,7 @@
 export const PROCESSING_FEE = Number(process.env.PROCESSING_FEE ?? 50);
 
 export const DELIVERY_METHODS = {
-  waybill: { label: "Waybill Delivery", fee: 500 },
+  waybill: { label: "Waybill Delivery", fee: 0 },
   rider: { label: "Give to Rider", fee: 0 },
   stock_piling: { label: "Stock Piling (7 Days Only)", fee: 0 },
   pickup: { label: "Store Pickup", fee: 0 },
